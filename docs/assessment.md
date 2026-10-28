@@ -217,7 +217,161 @@ Notes:
   - 4.3: fix TC1/TC2/TC4, add TC5/TC6
   - Appendix A: new URL and demo credentials
 
-## Day-by-day plan (deadline: up and running by end of **Fri 30 Oct**)
+## Revised plan for production use (updated Wed 28 Oct, 23:50)
+
+GymTrace will now be used by real members, not only demoed. This section replaces the original day-by-day plan below, which is kept for reference.
+
+### Progress so far
+- **Phase 1** (auth & roles, Firestore rules lockdown): done.
+- **Phase 2** (simulated card payments): done. That's about half a day ahead of the original plan.
+- **Nothing deployed yet.** Deployment is waiting on the Firebase and Vercel setup.
+
+### New requirements
+1. An admin **Record payment** flow for cash and bank transfer. It creates the subscription and payment record through the server, with the same history and receipts as card payments.
+2. The simulated card gateway sits behind a **server-side switch that is OFF in production**.
+3. **Forgot password**, admin **deactivate/reactivate**, and a **privacy notice** linked from registration.
+4. `docs/production-checklist.md`.
+
+### Two environments (recommended)
+| | Production | Demo / preview |
+|---|---|---|
+| Firebase project | `gymtrace-prod` (real members) | `gymtrace-demo` (test data only) |
+| Vercel environment | Production (your production branch) | Preview (every other branch) |
+| Card simulator | **OFF** | ON |
+| Used for | the gym | your defence, examiners, testing |
+
+Why two:
+- Fake card payments never reach real financial records.
+- Real people's data never appears in a demo.
+- FR6 (simulated gateway) can still be shown at the defence, on the demo environment.
+
+### Design of the new items
+1. **Card-simulator switch.**
+   - The setting is an environment variable, `PAYMENTS_SIMULATOR=enabled`. Anything else, including unset, means off, so a forgotten setting fails safe.
+   - With the switch off, `/api/pay` refuses ("Online card payments are not available yet").
+   - A new `GET /api/payment-options` tells the page which checkout to show.
+   - In production, the payment page shows plans, prices, "Pay at the front desk by cash or bank transfer; your plan activates as soon as staff record it", plus your history and receipts.
+   - It is deliberately **not** an admin toggle in the database. Otherwise one compromised admin account could switch on free memberships.
+2. **Record payment.** `POST /api/admin/record-payment`, admin only.
+   - **Fields:** member, plan, method (`cash` | `transfer`), amount, reference (required for transfer; optional receipt-book number for cash), note.
+   - **Same rules as card payments:** the same subscription rules and transaction (same expiry logic; a day pass is refused during an active monthly plan), plus an idempotency key against double submission.
+   - **Stored with it:** `method`, `recordedBy {uid, name}`, `reference`.
+   - **Amount:** pre-filled with the plan price; if changed, a note is required (decision 1 below).
+   - **Admin UI:** a "Record payment" action on each member row, plus a new **admin Payments page** listing all payments with date and method filters, totals per day and per method (for reconciling the cash box), and who recorded each one.
+3. **Receipts.** One receipt view for every payment, card or recorded.
+   - **Shows:** reference, date and time, member, plan, period covered, amount, method, last 4 digits or transfer reference, and who recorded it.
+   - **Access:** print or save as PDF from the browser. Members see their own; admins see all (current rules already allow this).
+   - **Not emailed** before Saturday.
+4. **Forgot password.** The page exists and calls Firebase. To harden it:
+   - show the same message whether or not the email has an account, so it doesn't reveal who's registered
+   - return the user to `/login?reset=1` with a confirmation
+   - add a friendly throttling message
+   - test it on the emulator
+5. **Deactivate / reactivate.** `POST /api/admin/set-account-status`.
+   - **Deactivating:**
+     - disables the Firebase Auth login and revokes active sessions
+     - marks the profile `disabled`
+     - makes the rules refuse everything except reading your own profile, so the app can say "account deactivated"
+     - makes the APIs refuse the account (token check with revocation), including check-in
+   - **Data is kept,** because payments are financial records.
+   - The admin **Delete** buttons go. Today they delete only the profile and leave a working login that lands on a broken page.
+   - **Data model change.** `status` currently means two things, so it's split:
+     - `status`: `active` | `pending` | `disabled`. Account status, set by the server or an admin only. Trainers register as `pending`; approving a trainer means activating them.
+     - `availability`: `available` | `unavailable`. The trainer's own switch (FR13).
+     - A trainer can be booked only when `status == active` **and** `availability == available`.
+   - **Small extra (my suggestion):** an admin **"Mark email verified"** action for members whose verification email went to spam. It's front-desk support, about 20 min.
+6. **Privacy notice.** A `/privacy` page linked from the registration checkbox. Today the "Terms of Service" and "Privacy Policy" links point to `#`.
+   - **Content:**
+     - what is collected: name, email, phone, check-in times, bookings, workout logs, and payments (cards: brand and last 4 digits only)
+     - why it's collected and who can see it (admins; trainers see bookings made with them)
+     - how long it's kept
+     - members' rights and a contact under the Nigeria Data Protection Act 2023
+   - **I'll write a draft** with clearly marked placeholders. It should be reviewed by the university's data protection contact.
+7. **`docs/production-checklist.md`** (end of Friday):
+   - accounts and ownership
+   - backups
+   - Vercel plan
+   - email sender setup
+   - future Paystack integration
+   - also monitoring, admin onboarding, handling data-deletion requests, and running costs
+
+### Revised day-by-day
+
+**Thu 29 Oct**
+| # | Work | Who | Est. | Covers |
+|---|---|---|---|---|
+| 0 | Create `gymtrace-prod` and `gymtrace-demo` Firebase projects and the Vercel project; set env vars (`PAYMENTS_SIMULATOR=enabled` for **Preview only**). Approve the rules/index deploy and admin seed for each real project. | You (+ me with your OK) | 1 h | setup |
+| 2b-1 | Simulator switch + "pay at the front desk" page state. Push → **first deploys (preview and production) by midday** | Me | 45 min | FR6, safety |
+| 3 | QR check-in as planned, plus: deactivated accounts refused, day pass used up on entry, revoked sessions rejected | Me | 4 h | FR8–12, TC2 |
+| 2b-2 | Record payment + receipts + admin Payments page | Me | 3 h | FR7, FR17 (payment summaries), new TC5b |
+
+End of Thursday: deployed, with the real-life loop working: register → pay at the desk (admin records it) → QR → scan → admitted, with receipts.
+
+**Fri 30 Oct**
+| # | Work | Est. | Covers |
+|---|---|---|---|
+| 4a | Account-status model, deactivate/reactivate, trainer approval, trainer availability toggle, Delete → Deactivate (+ "Mark email verified") | 2.5 h | FR13, FR18 |
+| 4b | Forgot password + privacy notice | 1 h | FR2 support, NFR3 |
+| 4c | Bookings: member cancel, past-date guard, remove `sessions` dead code | 1 h | FR14–16, TC4, TC6 |
+| 6 | Admin: Members page plan/expiry/status columns and filters; dashboard "active members" = members with an active plan; payment totals card | 1.5 h | FR17–18, TC7 |
+| 5 | Workout form: highlight missing fields in red | 30 min | FR19, TC3 |
+| QA | Full acceptance run on both environments (TC1–TC7 + new flows), fixes | 2 h | all |
+| Doc | `docs/production-checklist.md` | 45 min | |
+
+Friday totals about 9 hours, so it's a long day. The cut order below is what keeps it inside the deadline.
+
+### What gets cut to make room
+**Cut now:**
+1. Weekly-goal progress bar (TC3 step 2). Reword TC3 in the thesis.
+2. New charts, including the payment-summary chart. Totals appear as numbers on the admin Payments page and dashboard; the existing charts stay.
+3. Error boundary and bundle code-splitting.
+4. A separate front-desk "attendant" role. Instead, each staff member gets **their own admin account**, so "recorded by" always names a person. A proper staff role comes after launch.
+5. Editable bank-transfer instructions in admin Settings. Fixed text for now.
+6. Emailed receipts. On-screen and printable only.
+
+**If Friday slips, cut in this order:**
+1. Workout red highlighting (Phase 5)
+2. Past-date booking guard
+3. Admin "Mark email verified"
+4. Payment filters (keep the list and daily totals)
+
+**Never cut:**
+- simulator switch
+- QR check-in
+- record payment + receipts
+- deactivate
+- forgot password
+- privacy notice
+- FR16 member cancel
+- FR18 status fix
+
+### What code can't fix by Saturday
+Saturday is realistic as a **soft launch**: staff plus a small pilot group. Before opening to everyone, these items need doing. They're not code, and some need the university:
+- **Vercel plan.**
+  - The free Hobby plan is for non-commercial personal use only, and Vercel lists "requesting or processing payment from visitors" as commercial use.
+  - The production deployment of a gym taking fees should be on **Vercel Pro**, or later move hosting to Firebase, which would mean reworking `/api`.
+  - The demo deployment for the defence can stay on Hobby.
+- **Backups.**
+  - Firestore scheduled backups require the **Blaze** (pay-as-you-go) plan. Blaze keeps the free quota; set a budget alert.
+  - Without it, there are no automated backups of payment records.
+- **Email sender.**
+  - Firebase's default sender (`noreply@<project>.firebaseapp.com`) often lands in spam, and members who can't verify can't log in.
+  - Set up a custom sender domain. Until then, tell members to check spam (and keep "Mark email verified").
+- **Ownership.** Firebase, Vercel and GitHub should be owned by a university or gym account with at least two owners, not one personal account.
+- **Privacy notice** reviewed by Babcock's data protection contact.
+
+### Decisions needed (my default in brackets)
+1. Can a recorded payment's amount differ from the plan price? [Yes, with a required note.]
+2. Two Firebase projects, production + demo? [Yes.]
+3. Privacy notice details: data controller name, contact email, retention period. [Draft with marked placeholders.]
+4. Include admin "Mark email verified"? [Yes.]
+5. Vercel plan for production. [Your or the university's call; no code impact.]
+
+### Extra thesis impact
+- The new capabilities go beyond FR1–FR19: recorded cash/transfer payments, receipts, account deactivation, password reset, privacy notice. Suggest adding **FR20–FR23** in 3.3, plus test cases **TC5b** (recorded payment) and **TC8** (account management).
+- Delimitation iv in 1.5 still holds: there's no live payment gateway.
+
+## Day-by-day plan: original, superseded by the revised plan above
 Ground rules:
 - Work on a new branch (e.g. `secure-core`) in your fork. I never push or merge; you push.
 - Vercel builds a preview URL for each push, so there is always a working version to show.
