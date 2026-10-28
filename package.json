@@ -10,7 +10,9 @@
     "preview": "vite preview",
     "test:rules": "firebase emulators:exec --only firestore --project demo-gymtrace \"node --test tests/rules/*.test.mjs\"",
     "seed": "node scripts/seed.mjs",
-    "test": "npm run test:rules"
+    "test": "npm run test:rules",
+    "emulators": "firebase emulators:start --only auth,firestore --project demo-gymtrace",
+    "dev:emu": "VITE_USE_EMULATORS=true VITE_FIREBASE_API_KEY=demo-key VITE_FIREBASE_PROJECT_ID=demo-gymtrace VITE_FIREBASE_AUTH_DOMAIN=localhost vite"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
