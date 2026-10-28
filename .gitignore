@@ -33,3 +33,4 @@ dist-ssr
 firestore-debug.log
 firebase-debug.log
 *service-account*.json
+!.env.example
