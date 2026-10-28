@@ -1,6 +1,5 @@
 import {
   collection,
-  addDoc,
   query,
   where,
   orderBy,
@@ -13,20 +12,6 @@ import {
 import { db } from "../lib/firebase";
 
 const attendanceRef = collection(db, "attendance");
-
-/**
- * Record a check-in for a member (called by admin scanner).
- */
-export const recordCheckIn = async (memberId, memberName) => {
-  const docRef = await addDoc(attendanceRef, {
-    memberId,
-    memberName,
-    checkIn: serverTimestamp(),
-    checkOut: null,
-    status: "Active",
-  });
-  return docRef.id;
-};
 
 /**
  * Record a check-out for a specific attendance record.
@@ -91,8 +76,3 @@ export const getWeeklyAttendance = async (memberId) => {
 
   return days.map((name, i) => ({ name, visits: counts[i] }));
 };
-
-/**
- * Look up a member by UID and return basic info for scanner display.
- */
-export { getUserDoc as lookupMember } from "./userService";

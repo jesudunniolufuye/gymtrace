@@ -17,6 +17,9 @@ export const formatDate = (ms, withTime = false) =>
         ...(withTime ? { hour: "2-digit", minute: "2-digit" } : {}),
       });
 
+export const formatTime = (ms) =>
+  ms == null ? "—" : new Date(ms).toLocaleTimeString("en-GB", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit" });
+
 /** One-line description of a member's plan for dashboards and lists. */
 export const describeSubscription = (subscription, nowMs = Date.now()) => {
   const s = getSubscriptionStatus(subscription, nowMs);

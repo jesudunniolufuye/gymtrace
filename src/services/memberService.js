@@ -3,7 +3,6 @@ import {
   query,
   where,
   orderBy,
-  getDoc,
   getDocs,
   doc,
   updateDoc,
@@ -12,16 +11,6 @@ import {
 import { db } from "../lib/firebase";
 
 const usersRef = collection(db, "users");
-
-/**
- * Fetch a member by their ID.
- */
-export const getMemberById = async (uid) => {
-  const userRef = doc(db, "users", uid);
-  const snap = await getDoc(userRef);
-  if (!snap.exists()) return null;
-  return { uid, ...snap.data() };
-};
 
 /**
  * Fetch all users whose role === 'member'.
