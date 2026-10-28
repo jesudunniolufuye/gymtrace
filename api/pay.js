@@ -1,4 +1,5 @@
 // POST /api/pay — simulated payment for a membership plan (FR5, FR6, FR7).
+// Only available when PAYMENTS_SIMULATOR=enabled (staging/demo).
 //
 // Body: { plan: 'monthly' | 'session', idempotencyKey: string,
 //         card: { name, number, expiry: 'MM/YY', cvc } }
@@ -12,6 +13,7 @@ import { FieldValue, Timestamp } from 'firebase-admin/firestore';
 import { adminDb } from './_lib/firebaseAdmin.js';
 import { HttpError, apiHandler, readJson, requireUser, send } from './_lib/http.js';
 import { chargeCard, simulateNetworkDelay } from './_lib/gateway.js';
+import { cardSimulatorEnabled } from './_lib/config.js';
 import { validateCard } from '../shared/card.js';
 import { PLANS, PurchaseError, applyPurchase, toMillis } from '../shared/subscription.js';
 
@@ -49,6 +51,13 @@ function checkEligibility(subscription, planId, nowMs) {
 }
 
 export default apiHandler('/pay', ['POST'], async (req, res) => {
+  // Production runs with the simulator off: members pay at the front desk
+  // and an admin records the payment (POST /api/admin/record-payment).
+  if (!cardSimulatorEnabled()) {
+    throw new HttpError(403, 'Online card payments are not available. Please pay at the front desk.', {
+      code: 'simulator-disabled',
+    });
+  }
   const { uid, profile } = await requireUser(req, { roles: ['member'] });
   const body = await readJson(req);
 

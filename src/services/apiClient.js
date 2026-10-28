@@ -9,18 +9,22 @@ export class ApiError extends Error {
   }
 }
 
-/** POSTs JSON to /api/<path> with the signed-in user's Firebase ID token. */
-export async function apiPost(path, body) {
+/**
+ * Calls /api/<path>. Sends the signed-in user's Firebase ID token when there
+ * is one (the server decides whether the route needs it).
+ */
+async function request(method, path, body) {
+  const headers = {};
   const user = auth.currentUser;
-  if (!user) throw new ApiError("You are signed out. Please sign in again.", 401);
-  const token = await user.getIdToken();
+  if (user) headers.Authorization = `Bearer ${await user.getIdToken()}`;
+  if (body !== undefined) headers["Content-Type"] = "application/json";
 
   let response;
   try {
     response = await fetch(`/api/${path}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify(body),
+      method,
+      headers,
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch {
     throw new ApiError("Network error. Check your connection and try again.", 0);
@@ -32,3 +36,6 @@ export async function apiPost(path, body) {
   }
   return data;
 }
+
+export const apiGet = (path) => request("GET", path);
+export const apiPost = (path, body = {}) => request("POST", path, body);

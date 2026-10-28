@@ -4,10 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import {
-  AlertTriangle, Calendar, CheckCircle, CreditCard, Loader2, ShieldCheck, Ticket, X, XCircle, Zap,
+  AlertTriangle, Calendar, CheckCircle, CreditCard, Loader2, ShieldCheck, Store, Ticket, X, XCircle, Zap,
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
-import { getPaymentHistory, payForPlan } from '../../services/paymentService';
+import { getPaymentHistory, getPaymentOptions, payForPlan } from '../../services/paymentService';
 import { ApiError } from '../../services/apiClient';
 import { DAY_MS } from '../../../shared/subscription.js';
 import { TEST_CARDS, cvcValid, expiryValid, luhnValid } from '../../../shared/card.js';
@@ -34,6 +34,21 @@ const PaymentPage = () => {
   const [historyState, setHistoryState] = useState('loading'); // loading | ready | error
   const [historyVersion, setHistoryVersion] = useState(0);
   const [checkoutPlan, setCheckoutPlan] = useState(null);
+  // null while loading; false in production (pay at the front desk).
+  const [cardSimulator, setCardSimulator] = useState(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getPaymentOptions()
+      .then((options) => !cancelled && setCardSimulator(options.cardSimulator === true))
+      .catch((error) => {
+        console.error('Failed to load payment options', error);
+        if (!cancelled) setCardSimulator(false);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return undefined;
@@ -71,10 +86,23 @@ const PaymentPage = () => {
       <div className="max-w-6xl mx-auto space-y-8">
         <div>
           <h1 className="text-3xl font-display font-bold text-background-dark">Payments & Billing</h1>
-          <p className="text-gray-500 mt-1">Choose a plan, pay securely, and see your payment history.</p>
+          <p className="text-gray-500 mt-1">Your plan, prices, and payment history with receipts.</p>
         </div>
 
         <CurrentPlanCard status={status} now={now} />
+
+        {cardSimulator === false && (
+          <div className="flex gap-3 rounded-2xl border border-emerald-200 bg-emerald-50 p-5 text-sm text-emerald-900">
+            <Store size={22} className="shrink-0 text-emerald-600" />
+            <div>
+              <p className="font-bold mb-1">Pay at the front desk</p>
+              <p>
+                Pay by cash or bank transfer at the Fitness Centre front desk (ask staff for transfer details).
+                Staff record your payment and your plan starts immediately. Your receipt appears in Payment History below.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Plan options (FR5) */}
         <div className="grid md:grid-cols-2 gap-6">
@@ -83,6 +111,7 @@ const PaymentPage = () => {
             icon={<Zap size={20} className="text-amber-500" />}
             perks={['Unlimited entry for 30 days', 'QR code access every day', 'Renew early and keep your remaining days']}
             current={monthlyActive}
+            payable={cardSimulator}
             buttonLabel={monthlyActive ? `Renew (+30 days) · ${formatNaira(PLANS.monthly.amount)}` : `Pay ${formatNaira(PLANS.monthly.amount)}`}
             onSelect={() => setCheckoutPlan(PLANS.monthly)}
           />
@@ -92,6 +121,7 @@ const PaymentPage = () => {
             perks={['One gym entry (pay-per-session)', 'Valid until midnight today', 'Buy another for a second visit the same day']}
             current={status.active && status.plan === 'session'}
             disabledReason={monthlyActive ? 'Not needed while your monthly membership is active.' : null}
+            payable={cardSimulator}
             buttonLabel={`Pay ${formatNaira(PLANS.session.amount)}`}
             onSelect={() => setCheckoutPlan(PLANS.session)}
           />
@@ -148,7 +178,8 @@ const CurrentPlanCard = ({ status, now }) => {
   );
 };
 
-const PlanOption = ({ plan, icon, perks, current, disabledReason, buttonLabel, onSelect }) => (
+// payable: true = card checkout (staging), false = front desk only, null = loading.
+const PlanOption = ({ plan, icon, perks, current, disabledReason, payable, buttonLabel, onSelect }) => (
   <div className={`bg-white rounded-2xl p-6 border shadow-sm flex flex-col ${current ? 'border-primary' : 'border-gray-100'}`}>
     <div className="flex items-start justify-between mb-2">
       <div className="flex items-center gap-2">
@@ -169,13 +200,19 @@ const PlanOption = ({ plan, icon, perks, current, disabledReason, buttonLabel, o
         </li>
       ))}
     </ul>
-    <button
-      onClick={onSelect}
-      disabled={Boolean(disabledReason)}
-      className="mt-auto w-full py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
-    >
-      {buttonLabel}
-    </button>
+    {payable === false ? (
+      <p className="mt-auto text-sm font-semibold text-gray-600 text-center py-2.5 rounded-lg bg-gray-50 border border-gray-100">
+        Pay at the front desk
+      </p>
+    ) : (
+      <button
+        onClick={onSelect}
+        disabled={payable !== true || Boolean(disabledReason)}
+        className="mt-auto w-full py-2.5 bg-primary text-white font-bold rounded-lg hover:bg-emerald-600 transition-colors disabled:bg-gray-200 disabled:text-gray-500 disabled:cursor-not-allowed"
+      >
+        {payable === null ? 'Loading…' : buttonLabel}
+      </button>
+    )}
     {disabledReason && <p className="text-xs text-gray-500 mt-2">{disabledReason}</p>}
   </div>
 );

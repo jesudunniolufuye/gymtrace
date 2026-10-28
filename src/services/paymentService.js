@@ -1,6 +1,6 @@
 import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
-import { apiPost } from "./apiClient";
+import { apiGet, apiPost } from "./apiClient";
 
 /**
  * Pays for a plan through the server (POST /api/pay). The server decides the
@@ -8,6 +8,9 @@ import { apiPost } from "./apiClient";
  */
 export const payForPlan = ({ plan, card, idempotencyKey }) =>
   apiPost("pay", { plan, card, idempotencyKey });
+
+/** Which checkout to offer: { cardSimulator: boolean } (off in production). */
+export const getPaymentOptions = () => apiGet("payment-options");
 
 /** The member's own payments, newest first (FR7). */
 export const getPaymentHistory = async (memberId, max = 50) => {

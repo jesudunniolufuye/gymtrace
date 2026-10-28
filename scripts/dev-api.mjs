@@ -12,6 +12,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 process.env.FIRESTORE_EMULATOR_HOST ||= '127.0.0.1:8080';
 process.env.FIREBASE_AUTH_EMULATOR_HOST ||= '127.0.0.1:9099';
 process.env.GCLOUD_PROJECT ||= 'demo-gymtrace';
+// Local dev defaults. Override to test production behaviour, e.g.
+//   PAYMENTS_SIMULATOR=off npm run dev:api
+process.env.PAYMENTS_SIMULATOR ??= 'enabled';
+process.env.QR_SIGNING_SECRET ??= 'local-dev-only-qr-secret-not-for-real-use-0123456789';
 
 const apiDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..', 'api');
 const port = Number(process.env.API_PORT || 3001);
@@ -32,5 +36,5 @@ http
     console.log(`${req.method} ${pathname} → ${res.statusCode} (${Date.now() - started} ms)`);
   })
   .listen(port, '127.0.0.1', () => {
-    console.log(`API on http://127.0.0.1:${port} (emulators: ${process.env.FIRESTORE_EMULATOR_HOST}, ${process.env.FIREBASE_AUTH_EMULATOR_HOST})`);
+    console.log(`API on http://127.0.0.1:${port} (emulators: ${process.env.FIRESTORE_EMULATOR_HOST}, ${process.env.FIREBASE_AUTH_EMULATOR_HOST}; card simulator: ${process.env.PAYMENTS_SIMULATOR})`);
   });

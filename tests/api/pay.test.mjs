@@ -8,6 +8,29 @@ const { default: pay } = await import('../../api/pay.js');
 const getUser = async (uid) => (await adminDb.doc(`users/${uid}`).get()).data();
 const paymentsOf = async (uid) => (await adminDb.collection('payments').where('memberId', '==', uid).get()).docs.map((d) => d.data());
 
+describe('card simulator switch', () => {
+  test('off unless PAYMENTS_SIMULATOR=enabled: 403 and nothing written', async () => {
+    const m = await makeUser();
+    for (const value of [undefined, '', 'true', 'ENABLED', 'off']) {
+      if (value === undefined) delete process.env.PAYMENTS_SIMULATOR;
+      else process.env.PAYMENTS_SIMULATOR = value;
+      const r = await call(pay, { token: m.idToken, body: { plan: 'monthly', idempotencyKey: key(), card: goodCard } });
+      assert.equal(r.status, 403, `PAYMENTS_SIMULATOR=${value}`);
+      assert.equal(r.body.code, 'simulator-disabled');
+    }
+    process.env.PAYMENTS_SIMULATOR = 'enabled';
+    assert.equal((await paymentsOf(m.uid)).length, 0);
+    assert.equal((await getUser(m.uid)).subscription, undefined);
+  });
+  test('payment-options reports the switch', async () => {
+    const { default: options } = await import('../../api/payment-options.js');
+    assert.deepEqual((await call(options, { method: 'GET' })).body, { cardSimulator: true });
+    process.env.PAYMENTS_SIMULATOR = 'off';
+    assert.deepEqual((await call(options, { method: 'GET' })).body, { cardSimulator: false });
+    process.env.PAYMENTS_SIMULATOR = 'enabled';
+  });
+});
+
 describe('POST /api/pay: who may pay', () => {
   test('no token → 401', async () => {
     const r = await call(pay, { body: { plan: 'monthly', idempotencyKey: key(), card: goodCard } });

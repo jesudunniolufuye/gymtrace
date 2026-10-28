@@ -4,6 +4,8 @@ import { randomUUID } from 'node:crypto';
 
 process.env.GCLOUD_PROJECT ||= 'demo-gymtrace';
 process.env.PAY_SIM_DELAY_MS = '0';
+process.env.PAYMENTS_SIMULATOR = 'enabled';
+process.env.QR_SIGNING_SECRET = 'test-only-qr-signing-secret-0123456789abcdef';
 
 const { adminAuth, adminDb } = await import('../../api/_lib/firebaseAdmin.js');
 export { adminAuth, adminDb };
