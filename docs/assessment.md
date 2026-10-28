@@ -217,6 +217,79 @@ Notes:
   - 4.3: fix TC1/TC2/TC4, add TC5/TC6
   - Appendix A: new URL and demo credentials
 
+## Plan v3: deadline Friday 30 Oct, early afternoon (updated Thu 29 Oct, 00:05)
+
+**Code freeze: Friday 11:00.** Friday morning is only for the full test run on staging and production, and fixing what it finds. No new features on Friday. The design notes in the next section ("Revised plan for production use") still apply; this section replaces its schedule and cut list.
+
+Environments: **staging** = the demo project (`gymtrace-demo`, card simulator ON); **production** = `gymtrace-prod` (simulator OFF).
+
+### Must have by the freeze
+1. **Daily loop:** register → admin records a cash/transfer payment → member's QR → admin check-in. This includes:
+   - receipts
+   - the admin Payments list
+   - the Members page showing each member's real plan and expiry. The admin needs this to see who has paid before recording a payment, so the visible part of FR18 moves in here.
+2. **Account deactivation / reactivation**, which disables the login and blocks check-in. It replaces the Delete buttons.
+3. **Forgot password.**
+4. **Privacy notice** with placeholders, linked from registration.
+5. **Card-simulator switch**, OFF unless `PAYMENTS_SIMULATOR=enabled`.
+
+### Schedule
+**Wed night / early Thu (tonight)**, all on the emulator:
+- Simulator switch, plus the "pay at the front desk" state of the payment page.
+- QR check-in (Phase 3):
+  - signed 60-second QR tokens
+  - an admin-only `/api/check-in` for camera and manual entry
+  - payment check, day pass used up on entry, protection against replayed and double scans
+  - deactivated accounts refused
+  - attendance created only by the server
+
+**Thu 29**
+| Time | Work | Who |
+|---|---|---|
+| 08:00–09:00 | Create the staging and production Firebase projects and the Vercel project; set env vars (`PAYMENTS_SIMULATOR=enabled` on **Preview/staging only**; `QR_SIGNING_SECRET` different per environment). Approve rules/index deploys and admin seeds for each real project. | You (+ me with your OK) |
+| 08:00–11:00 | Record payment API + tests; admin "Record payment" on the Members page with the real plan/expiry column; receipts (member and admin); admin Payments list | Me |
+| ~11:00 | **First deploys: staging and production** | You push |
+| 11:00–13:30 | Deactivate / reactivate (API, rules, tests, UI; Delete buttons removed) | Me |
+| 13:30–14:30 | Forgot password + privacy notice | Me |
+| 14:30–16:00 | My end-to-end run of all must-haves on staging; fixes; redeploy | Me |
+| 16:00– | Nice-to-haves, **only if every must-have is done and tested**, in the order below; each one tested before the next starts | Me |
+| Evening | Draft `docs/production-checklist.md` | Me |
+
+**Fri 30**
+| Time | Work |
+|---|---|
+| 08:00–10:30 | Full test run on **staging and production** (desktop + phone): TC1, TC2, recorded payment, receipts, deactivation, password reset, the security smoke test; fix only what it finds |
+| 10:30–11:00 | Final build, tests green, you deploy production |
+| **11:00** | **Code freeze** |
+| 11:00–12:30 | Docs only: finalise `docs/production-checklist.md`, demo credentials for Appendix A (kept out of git), handover |
+
+Any test on **production** creates real records, so you run those yourself, or tell me exactly what I may create.
+
+### Nice-to-have (Thursday afternoon only if must-haves are done; otherwise post-launch)
+In priority order:
+1. Member cancels a booking (FR16), plus a past-date guard
+2. Trainer availability toggle (FR13), with `status` split into account status and trainer availability
+3. Admin dashboard: "active members" = members with an active plan, and a payment totals card
+4. Admin "Mark email verified"
+5. Workout form: highlight missing fields in red (TC3 step 3)
+6. Payment filters (date, method)
+7. Remove `sessions` dead code and other cleanup
+
+Whatever isn't done by Thursday evening goes into `docs/production-checklist.md` as post-launch work.
+
+### Post-launch (already decided)
+- Weekly-goal progress bar
+- New charts
+- Error boundary, bundle code-splitting
+- A separate front-desk/attendant role (for now, each staff member gets their own admin account)
+- Emailed receipts
+- Editable bank-transfer instructions
+- Paystack integration
+- Non-code launch items: Vercel Pro for production, Blaze + backups, custom email sender domain, shared ownership, privacy review
+
+### Thesis risk to note
+FR13 (trainer availability) and FR16 (member cancel) are thesis requirements. If they don't make it on Thursday, they'll be **partial at the deadline**, and the thesis should say so or describe them as future work. The rest of FR18 (filters, subscription summary) is also nice-to-have; the plan/expiry column is in the must-haves.
+
 ## Revised plan for production use (updated Wed 28 Oct, 23:50)
 
 GymTrace will now be used by real members, not only demoed. This section replaces the original day-by-day plan below, which is kept for reference.
@@ -295,7 +368,7 @@ Why two:
    - future Paystack integration
    - also monitoring, admin onboarding, handling data-deletion requests, and running costs
 
-### Revised day-by-day
+### Revised day-by-day (superseded by Plan v3 above)
 
 **Thu 29 Oct**
 | # | Work | Who | Est. | Covers |
@@ -320,7 +393,7 @@ End of Thursday: deployed, with the real-life loop working: register → pay at 
 
 Friday totals about 9 hours, so it's a long day. The cut order below is what keeps it inside the deadline.
 
-### What gets cut to make room
+### What gets cut to make room (superseded by Plan v3 above)
 **Cut now:**
 1. Weekly-goal progress bar (TC3 step 2). Reword TC3 in the thesis.
 2. New charts, including the payment-summary chart. Totals appear as numbers on the admin Payments page and dashboard; the existing charts stay.
