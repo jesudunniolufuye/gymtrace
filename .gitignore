@@ -28,3 +28,8 @@ dist-ssr
 # Environment Variables
 .env
 .env.*
+
+# Firebase emulator / service account
+firestore-debug.log
+firebase-debug.log
+*service-account*.json

@@ -1,76 +1,162 @@
 rules_version = '2';
 
+// GymTrace Firestore security rules.
+//
+// Principles:
+//  - The browser is untrusted. Anything that grants access or money-like value
+//    (role, subscription, payments, attendance) is written only by the server
+//    (Vercel API functions using firebase-admin, which bypasses these rules)
+//    or by an admin.
+//  - Users must have verified their email before they can touch app data.
+//    The only exceptions are creating and reading their own profile, which
+//    happen during registration before verification.
+//  - Anything not matched below is denied by default (payments, errorLogs,
+//    qrNonces, sessions, ...).
+
 service cloud.firestore {
   match /databases/{database}/documents {
-    
-    // --- Helper Functions ---
-    function isAuthenticated() {
+
+    // ---------- Helpers ----------
+
+    function signedIn() {
       return request.auth != null;
     }
-    
-    function isAdmin() {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+
+    function verified() {
+      return signedIn() && request.auth.token.email_verified == true;
     }
 
-    function isTrainer() {
-      return isAuthenticated() && 
-        get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'trainer';
+    function isSelf(uid) {
+      return signedIn() && request.auth.uid == uid;
     }
 
-    // --- Collection Rules ---
+    function myProfile() {
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
+    }
 
-    // 1. Users can read/write their own profile. Authenticated users can read others (needed for trainers/clients).
+    function hasRole(role) {
+      return verified()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && myProfile().role == role;
+    }
+
+    function isAdmin()   { return hasRole('admin'); }
+    function isTrainer() { return hasRole('trainer'); }
+
+    function changedOnly(fields) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
+    }
+
+    function validName(v)  { return v is string && v.size() >= 2 && v.size() <= 80; }
+    function validPhone(v) { return v is string && v.size() <= 20; }
+
+    // ---------- users ----------
+    // Self-registration may only create a member or a trainer. Trainers start
+    // 'inactive' until an admin activates them. Role, status and any
+    // subscription data can never be changed by the user themselves.
     match /users/{userId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && (request.auth.uid == userId || isAdmin());
-    }
+      allow read: if isSelf(userId)
+        || isAdmin()
+        || (verified() && resource.data.role == 'trainer');
 
-    // 2. Attendance - Users can check themselves in/out. Admins can do anything.
-    match /attendance/{docId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (request.resource.data.memberId == request.auth.uid || isAdmin());
-      allow update: if isAuthenticated() && (resource.data.memberId == request.auth.uid || isAdmin());
+      allow create: if isSelf(userId)
+        && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'phone', 'status', 'createdAt'])
+        && request.resource.data.keys().hasAll(['name', 'email', 'role', 'phone', 'status', 'createdAt'])
+        && validName(request.resource.data.name)
+        && request.resource.data.email == request.auth.token.email
+        && request.resource.data.phone == ''
+        && request.resource.data.createdAt == request.time
+        && (
+          (request.resource.data.role == 'member'  && request.resource.data.status == 'active') ||
+          (request.resource.data.role == 'trainer' && request.resource.data.status == 'inactive')
+        );
+
+      allow update: if isAdmin()
+        || (isSelf(userId) && verified()
+            && changedOnly(['name', 'phone'])
+            && validName(request.resource.data.name)
+            && validPhone(request.resource.data.phone));
+
       allow delete: if isAdmin();
     }
 
-    // 3. Bookings - Members book their own. Trainers and Admins can update/cancel.
+    // ---------- attendance ----------
+    // Check-ins are created by staff only (moved to the server in phase 3).
+    // A member may only close (check out) their own open record.
+    match /attendance/{docId} {
+      allow read: if isAdmin() || (verified() && resource.data.memberId == request.auth.uid);
+
+      allow create, delete: if isAdmin();
+
+      allow update: if isAdmin()
+        || (verified()
+            && resource.data.memberId == request.auth.uid
+            && resource.data.status == 'Active'
+            && changedOnly(['checkOut', 'status'])
+            && request.resource.data.status == 'Completed'
+            && request.resource.data.checkOut == request.time);
+    }
+
+    // ---------- bookings ----------
+    // Members book active trainers for themselves. Afterwards the only change
+    // a member can make is cancelling; a trainer can complete or cancel.
     match /bookings/{docId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && request.resource.data.memberId == request.auth.uid;
-      allow update, delete: if isAuthenticated() && (
-        resource.data.memberId == request.auth.uid || 
-        resource.data.trainerId == request.auth.uid || 
-        isAdmin()
-      );
+      allow read: if isAdmin()
+        || (verified() && (resource.data.memberId == request.auth.uid
+                           || resource.data.trainerId == request.auth.uid));
+
+      allow create: if verified()
+        && request.resource.data.memberId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['memberId', 'memberName', 'trainerId', 'trainerName',
+                                                 'date', 'time', 'sessionType', 'status', 'createdAt'])
+        && request.resource.data.status == 'upcoming'
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.date is string && request.resource.data.date.size() == 10
+        && request.resource.data.time is string && request.resource.data.time.size() <= 10
+        && request.resource.data.memberName is string && request.resource.data.memberName.size() <= 80
+        && request.resource.data.trainerName is string && request.resource.data.trainerName.size() <= 80
+        && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.role == 'trainer'
+        && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.status == 'active';
+
+      allow update: if isAdmin()
+        || (verified() && resource.data.status == 'upcoming' && changedOnly(['status']) && (
+              (resource.data.memberId == request.auth.uid
+                 && request.resource.data.status == 'cancelled') ||
+              (resource.data.trainerId == request.auth.uid
+                 && request.resource.data.status in ['completed', 'cancelled'])
+           ));
+
+      allow delete: if isAdmin();
     }
 
-    // 4. Workouts - Members manage their own logs, Trainers/Admins can view/manage.
+    // ---------- workouts ----------
+    // Personal logs: only the owner can read or change them.
     match /workouts/{docId} {
-      allow read: if isAuthenticated();
-      allow create: if isAuthenticated() && (
-        request.resource.data.userId == request.auth.uid || 
-        request.resource.data.memberId == request.auth.uid || 
-        isTrainer() || 
-        isAdmin()
-      );
-      allow update, delete: if isAuthenticated() && (
-        resource.data.userId == request.auth.uid ||
-        resource.data.memberId == request.auth.uid || 
-        isTrainer() || 
-        isAdmin()
-      );
+      allow read, delete: if verified() && resource.data.memberId == request.auth.uid;
+
+      allow create: if verified()
+        && request.resource.data.memberId == request.auth.uid
+        && request.resource.data.keys().hasOnly(['memberId', 'title', 'duration', 'calories',
+                                                 'difficulty', 'date', 'exercises', 'createdAt'])
+        && request.resource.data.title is string
+        && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 100
+        && request.resource.data.exercises is list && request.resource.data.exercises.size() <= 50;
+
+      allow update: if verified()
+        && resource.data.memberId == request.auth.uid
+        && request.resource.data.memberId == request.auth.uid;
     }
 
-    // 5. Sessions - Manageable by Trainers and Admins
-    match /sessions/{docId} {
-      allow read: if isAuthenticated();
-      allow write: if isAuthenticated() && (isTrainer() || isAdmin());
+    // ---------- payments ----------
+    // Written only by the server (phase 2). Members can read their own.
+    match /payments/{docId} {
+      allow read: if isAdmin() || (verified() && resource.data.memberId == request.auth.uid);
+      allow write: if false;
     }
 
-    // 6. Settings - Admins can read and write. Members can read.
+    // ---------- settings ----------
     match /settings/{docId} {
-      allow read: if isAuthenticated();
+      allow read: if verified();
       allow write: if isAdmin();
     }
   }
