@@ -238,7 +238,7 @@ const CheckoutModal = ({ plan, onClose, onFinished }) => {
     }`;
 
   return (
-    <div className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
+    <div className="fixed inset-0 bg-black/60 z-[60] flex items-center justify-center p-4" role="dialog" aria-modal="true" aria-labelledby="checkout-title">
       <div className="bg-white rounded-xl w-full max-w-md overflow-hidden flex flex-col max-h-[95vh]">
         <div className="p-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
           <h3 id="checkout-title" className="font-bold text-gray-900">Checkout</h3>
@@ -248,9 +248,9 @@ const CheckoutModal = ({ plan, onClose, onFinished }) => {
         </div>
 
         <form onSubmit={handleSubmit(onSubmit)} noValidate className="p-6 space-y-4 overflow-y-auto">
-          <div className="flex justify-between items-center p-3 rounded-lg bg-gray-50 border border-gray-100">
+          <div className="flex flex-wrap justify-between items-center gap-2 p-3 rounded-lg bg-gray-50 border border-gray-100">
             <span className="font-semibold text-gray-800">{plan.label}</span>
-            <span className="font-bold text-gray-900">{formatNaira(plan.amount)}</span>
+            <span className="font-bold text-gray-900 whitespace-nowrap">{formatNaira(plan.amount)}</span>
           </div>
 
           <div className="rounded-lg border border-blue-100 bg-blue-50 p-3 text-xs text-blue-900">
