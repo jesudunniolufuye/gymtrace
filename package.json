@@ -13,7 +13,8 @@
     "emulators": "firebase emulators:start --only auth,firestore --project demo-gymtrace",
     "dev:emu": "VITE_USE_EMULATORS=true VITE_FIREBASE_API_KEY=demo-key VITE_FIREBASE_PROJECT_ID=demo-gymtrace VITE_FIREBASE_AUTH_DOMAIN=localhost vite",
     "test:unit": "node --test tests/unit/*.test.mjs",
-    "test:emu": "firebase emulators:exec --only auth,firestore --project demo-gymtrace \"node --test --test-concurrency=1 tests/rules/*.test.mjs tests/api/*.test.mjs\""
+    "test:emu": "firebase emulators:exec --only auth,firestore --project demo-gymtrace \"node --test --test-concurrency=1 tests/rules/*.test.mjs tests/api/*.test.mjs\"",
+    "dev:api": "node scripts/dev-api.mjs"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",

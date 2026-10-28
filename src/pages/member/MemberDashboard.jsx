@@ -17,19 +17,17 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useAuth } from '../../context/AuthContext';
 import { getAttendanceByMember, getWeeklyAttendance } from '../../services/attendanceService';
 import { getBookingsByMember } from '../../services/bookingService';
+import { describeSubscription, getSubscriptionStatus, PLANS } from '../../lib/subscription';
 
 const MemberDashboard = () => {
     const { user, userData } = useAuth();
     const navigate = useNavigate();
     const firstName = userData?.name?.split(' ')[0] || 'Member';
-    const isPremium = userData?.isPremium === true;
-    const isOneTimePass = userData?.oneTimePass === true || userData?.planType === 'one-time';
-    
-    let displayPlanName = 'Basic';
-    if (isPremium) displayPlanName = 'Premium';
-    else if (isOneTimePass) displayPlanName = 'One-Time Pass';
-    
-    const isActive = isPremium || isOneTimePass;
+    // Subscription is written only by the server (POST /api/pay).
+    const subscription = getSubscriptionStatus(userData?.subscription);
+    const isActive = subscription.active;
+    const displayPlanName = isActive ? PLANS[subscription.plan].label : 'No active plan';
+    const planDetail = describeSubscription(userData?.subscription);
 
     const [weeklyData, setWeeklyData] = useState([
       { name: 'Mon', visits: 0 },
@@ -133,13 +131,13 @@ const MemberDashboard = () => {
                 <Zap size={24} />
               </div>
               <span className={`text-xs font-bold px-2 py-1 rounded-full ${isActive ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
-                {isActive ? 'ACTIVE' : 'FREE'}
+                {isActive ? 'ACTIVE' : 'INACTIVE'}
               </span>
             </div>
             <div>
               <p className="text-sm text-gray-500 font-medium">Subscription Plan</p>
               <h3 className="text-xl font-bold text-gray-900 mt-1">{displayPlanName}</h3>
-              <p className="text-xs text-gray-400 mt-1">{isPremium ? 'Active Subscription' : isOneTimePass ? 'Active Pass' : 'Upgrade for full access'}</p>
+              <p className="text-xs text-gray-400 mt-1">{isActive ? planDetail : 'Buy a plan for gym access'}</p>
             </div>
           </div>
   
@@ -199,7 +197,7 @@ const MemberDashboard = () => {
                 <h2 className="text-3xl font-bold tracking-tight mb-2 capitalize">{displayPlanName}</h2>
                 <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium bg-emerald-400/10 w-fit px-2 py-1 rounded-full">
                      <Activity size={12} />
-                     <span>{isActive ? 'Active subscription/pass' : 'Limited access'}</span>
+                     <span>{isActive ? planDetail : 'No gym access yet'}</span>
                 </div>
              </div>
              

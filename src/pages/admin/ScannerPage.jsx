@@ -13,7 +13,7 @@ import { toast } from 'sonner';
 import { recordCheckIn } from '../../services/attendanceService';
 import { getMemberById } from '../../services/memberService';
 
-import { updateUserDoc } from '../../services/userService';
+import { describeSubscription } from '../../lib/subscription';
 
 const ScannerPage = () => {
   const [scanResult, setScanResult] = useState(null);
@@ -57,11 +57,8 @@ const ScannerPage = () => {
       // Record check-in
       await recordCheckIn(uid, member.name);
 
-      // If the member is using a one-time pass, consume it
-      if (member.oneTimePass) {
-        await updateUserDoc(uid, { oneTimePass: false });
-        toast.info("One-Time Pass consumed.");
-      }
+      // NOTE: payment checks and day-pass consumption move to the server
+      // (POST /api/check-in) in phase 3.
 
       setScanResult({
         status: 'success',
@@ -69,7 +66,7 @@ const ScannerPage = () => {
           name: member.name,
           id: uid.slice(0, 12),
           status: member.status || "Active",
-          plan: member.oneTimePass ? "One-Time Pass" : (member.isPremium ? "Pro Member" : "Basic"),
+          plan: describeSubscription(member.subscription),
           photoUrl: member.photoUrl || null,
         }
       });

@@ -12,6 +12,7 @@ import {
   Lock
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { getSubscriptionStatus } from '../../lib/subscription';
 import logo from '../../assets/logo.png';
 
 const QRCodePage = () => {
@@ -20,7 +21,9 @@ const QRCodePage = () => {
   const [timeLeft, setTimeLeft] = useState(60);
   const [qrValue, setQrValue] = useState("");
 
-  const isPremium = userData?.isPremium === true;
+  // Any active plan (monthly or an unused day pass) can show a QR code.
+  // The QR itself becomes a server-signed token in phase 3.
+  const isPremium = getSubscriptionStatus(userData?.subscription).active;
 
   const generateQRCallback = () => {
     if (!user?.uid || !isPremium) return;
@@ -90,15 +93,15 @@ const QRCodePage = () => {
               <div className="w-16 h-16 bg-amber-100 rounded-full flex justify-center items-center mb-4">
                 <Lock className="w-8 h-8 text-amber-500" />
               </div>
-              <h2 className="text-xl font-bold text-slate-800 mb-2">Premium Required</h2>
+              <h2 className="text-xl font-bold text-slate-800 mb-2">Active Plan Required</h2>
               <p className="text-sm text-slate-500 mb-6 px-4">
-                Generating QR codes for club access is a premium feature. Upgrade your account today!
+                You need an active monthly membership or day pass to get your entry QR code.
               </p>
               <button 
-                onClick={() => navigate('/member/payment')}
+                onClick={() => navigate('/member/payments')}
                 className="w-full bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl transition-all active:scale-95 shadow-lg shadow-amber-200"
               >
-                Upgrade to Premium
+                Choose a Plan
               </button>
             </div>
           ) : (
