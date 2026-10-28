@@ -75,7 +75,8 @@ const QRCodePage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const secondsLeft = qr ? Math.max(0, Math.ceil((qr.expiresAt - now) / 1000)) : 0;
+  // Capped at 60: right after a renewal `now` is from the previous tick.
+  const secondsLeft = qr ? Math.min(60, Math.max(0, Math.ceil((qr.expiresAt - now) / 1000))) : 0;
 
   return (
     <div className="min-h-screen bg-slate-50 font-sans pb-8">
