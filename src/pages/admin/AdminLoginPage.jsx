@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { Lock, Mail, ArrowRight, ShieldCheck } from 'lucide-react';
-import { loginUser } from '../../services/authService';
+import { loginUser, logoutUser } from '../../services/authService';
+import { authErrorMessage } from '../../lib/authErrors';
 import { getUserDoc } from '../../services/userService';
 import logo from '../../assets/logo.png';
 
@@ -32,9 +33,16 @@ const AdminLoginPage = () => {
   const onSubmit = async (data) => {
     try {
       const cred = await loginUser(data.email, data.password);
-      const profile = await getUserDoc(cred.user.uid);
+      if (!cred.user.emailVerified) {
+        await logoutUser();
+        toast.error('Please verify your email before logging in.');
+        return;
+      }
 
+      const profile = await getUserDoc(cred.user.uid);
       if (profile?.role !== 'admin') {
+        // Don't leave a non-admin signed in from the admin portal.
+        await logoutUser();
         toast.error('Access denied. Admin accounts only.');
         return;
       }
@@ -42,7 +50,7 @@ const AdminLoginPage = () => {
       toast.success('Welcome back, Administrator');
       navigate('/admin/dashboard');
     } catch (error) {
-      toast.error('Invalid admin credentials');
+      toast.error(authErrorMessage(error, 'Invalid admin credentials'));
     }
   };
 

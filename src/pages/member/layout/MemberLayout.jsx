@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Outlet, NavLink, useLocation, Link, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -18,7 +18,6 @@ import { logoutUser } from '../../../services/authService';
 import logo from '../../../assets/logo.png';
 
 const MemberLayout = () => {
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { userData } = useAuth();

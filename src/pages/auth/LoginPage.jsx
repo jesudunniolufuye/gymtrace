@@ -1,11 +1,14 @@
-import { Mail, Lock, LogIn } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState } from 'react';
+import { Mail, Lock, LogIn, MailCheck, AlertTriangle } from 'lucide-react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { loginUser } from '../../services/authService';
+import { loginUser, logoutUser, sendEmailVerification } from '../../services/authService';
 import { getUserDoc } from '../../services/userService';
+import { authErrorMessage } from '../../lib/authErrors';
+import { dashboardPath } from '../../lib/roles';
 import logo from '../../assets/logo.png';
 
 const loginSchema = z.object({
@@ -30,26 +33,56 @@ const LoginPage = () => {
     },
   });
 
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  // Shown after registering (set by RegisterPage) or after clicking the email link.
+  const registeredEmail = location.state?.registeredEmail;
+  const justVerified = searchParams.get('verified') === '1';
+
+  // Holds the credentials of an unverified login so we can resend the email.
+  const [unverified, setUnverified] = useState(null);
+  const [resending, setResending] = useState(false);
+
   const onSubmit = async (data) => {
+    setUnverified(null);
     try {
       const cred = await loginUser(data.email, data.password);
+
+      // TC1 step 2: no dashboard access until the email is verified.
+      if (!cred.user.emailVerified) {
+        await logoutUser();
+        setUnverified({ email: data.email, password: data.password });
+        toast.error('Please verify your email before logging in.');
+        return;
+      }
+
       const profile = await getUserDoc(cred.user.uid);
+      if (!profile) {
+        await logoutUser();
+        toast.error('Account profile not found. Contact the gym administrator.');
+        return;
+      }
 
       toast.success('Logged in successfully!');
-
-      if (profile?.role === 'trainer') {
-        navigate('/trainer/dashboard');
-      } else if (profile?.role === 'admin') {
-        navigate('/admin/dashboard');
-      } else {
-        navigate('/member/dashboard');
-      }
+      navigate(dashboardPath(profile.role));
     } catch (error) {
-      const msg =
-        error.code === 'auth/invalid-credential'
-          ? 'Invalid email or password.'
-          : 'Login failed. Please try again.';
-      toast.error(msg);
+      toast.error(authErrorMessage(error, 'Login failed. Please try again.'));
+    }
+  };
+
+  const resendVerification = async () => {
+    if (!unverified) return;
+    setResending(true);
+    try {
+      // Sign in briefly to get the user object, send the email, sign out again.
+      const cred = await loginUser(unverified.email, unverified.password);
+      await sendEmailVerification(cred.user);
+      await logoutUser();
+      toast.success(`Verification email sent to ${unverified.email}.`);
+    } catch (error) {
+      toast.error(authErrorMessage(error, 'Could not resend the email. Please try again later.'));
+    } finally {
+      setResending(false);
     }
   };
 
@@ -66,6 +99,43 @@ const LoginPage = () => {
         <p className="text-slate-500 text-sm mt-2 mb-8 font-medium">
           Access your Babcock University gym account
         </p>
+
+        {justVerified && (
+          <div role="status" className="mb-6 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <MailCheck className="w-5 h-5 shrink-0" />
+            <p>Your email has been verified. You can now log in.</p>
+          </div>
+        )}
+
+        {registeredEmail && !justVerified && !unverified && (
+          <div role="status" className="mb-6 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <MailCheck className="w-5 h-5 shrink-0" />
+            <p>
+              Account created. We sent a verification link to <strong>{registeredEmail}</strong>.
+              Check your inbox (and spam folder), click the link, then log in here.
+            </p>
+          </div>
+        )}
+
+        {unverified && (
+          <div role="alert" className="mb-6 rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+            <div className="flex gap-3">
+              <AlertTriangle className="w-5 h-5 shrink-0" />
+              <p>
+                Your email address has not been verified yet. Open the link we sent to{' '}
+                <strong>{unverified.email}</strong>, then log in again.
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={resendVerification}
+              disabled={resending}
+              className="mt-3 ml-8 font-bold text-amber-800 underline disabled:opacity-60"
+            >
+              {resending ? 'Sending…' : 'Resend verification email'}
+            </button>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Email Input */}

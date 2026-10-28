@@ -49,7 +49,6 @@ const MemberDashboard = () => {
     const [activityView, setActivityView] = useState('This Week');
     
     const [lastCheckIn, setLastCheckIn] = useState(null);
-    const [totalVisits, setTotalVisits] = useState(0);
     const [nextBooking, setNextBooking] = useState(null);
 
     useEffect(() => {
@@ -62,7 +61,6 @@ const MemberDashboard = () => {
             getBookingsByMember(user.uid),
           ]);
           setWeeklyData(weekly);
-          setTotalVisits(all.length);
 
           // Calculate Monthly Data
           const now = new Date();

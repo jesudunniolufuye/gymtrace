@@ -1,6 +1,6 @@
 import React from 'react';
 import { Mail, ArrowRight, ArrowLeft } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -13,7 +13,6 @@ const forgotPasswordSchema = z.object({
 });
 
 const ForgotPasswordPage = () => {
-  const navigate = useNavigate();
 
   const {
     register,
@@ -31,6 +30,7 @@ const ForgotPasswordPage = () => {
       await resetPassword(data.email);
       toast.success('Password reset link sent! Check your email.');
     } catch (error) {
+      console.error(error);
       toast.error('Failed to send reset link. Please try again.');
     }
   };

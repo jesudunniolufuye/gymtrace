@@ -8,17 +8,18 @@ import {
 import { db } from "../lib/firebase";
 
 /**
- * Create a user document in Firestore after registration.
+ * Create the user's profile right after registration.
+ * The Firestore rules only accept exactly these fields: role must be
+ * member or trainer, and trainers start inactive until an admin activates them.
  */
-export const createUserDoc = async (uid, data) => {
+export const createUserDoc = async (uid, { name, email, role }) => {
   const userRef = doc(db, "users", uid);
   await setDoc(userRef, {
-    name: data.name,
-    email: data.email,
-    role: data.role,
+    name,
+    email,
+    role,
     phone: "",
-    status: "active",
-    isPremium: false,
+    status: role === "trainer" ? "inactive" : "active",
     createdAt: serverTimestamp(),
   });
 };

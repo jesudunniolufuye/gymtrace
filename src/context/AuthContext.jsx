@@ -4,6 +4,8 @@ import { getUserDoc } from "../services/userService";
 
 const AuthContext = createContext(null);
 
+// Hook lives next to the provider on purpose; it is not a component.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const ctx = useContext(AuthContext);
   if (!ctx) throw new Error("useAuth must be used within AuthProvider");
@@ -11,24 +13,33 @@ export const useAuth = () => {
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);       // Firebase Auth user
+  const [user, setUser] = useState(null);       // Firebase Auth user (verified only)
   const [userData, setUserData] = useState(null); // Firestore profile
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const unsubscribe = onAuthChange(async (firebaseUser) => {
-      if (firebaseUser) {
-        setUser(firebaseUser);
-        try {
-          const profile = await getUserDoc(firebaseUser.uid);
-          setUserData(profile);
-        } catch (error) { console.error(error);
-          setUserData(null);
-        }
-      } else {
+      // Users who have not verified their email are treated as signed out.
+      // The login page signs them out and explains why; the Firestore rules
+      // also refuse their requests.
+      if (!firebaseUser || !firebaseUser.emailVerified) {
         setUser(null);
         setUserData(null);
+        setLoading(false);
+        return;
       }
+
+      // Keep the app in its loading state until the profile is known, so
+      // route guards never see "signed in, profile missing" mid-fetch.
+      setLoading(true);
+      let profile = null;
+      try {
+        profile = await getUserDoc(firebaseUser.uid);
+      } catch (error) {
+        console.error("Failed to load user profile", error);
+      }
+      setUser(firebaseUser);
+      setUserData(profile);
       setLoading(false);
     });
     return unsubscribe;

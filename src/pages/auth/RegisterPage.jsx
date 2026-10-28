@@ -1,12 +1,13 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Mail, Lock, User, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
-import { registerUser, sendEmailVerification } from '../../services/authService';
+import { registerUser, sendEmailVerification, logoutUser, deleteAuthUser } from '../../services/authService';
 import { createUserDoc } from '../../services/userService';
+import { authErrorMessage } from '../../lib/authErrors';
 import logo from '../../assets/logo.png';
 
 const registerSchema = z.object({
@@ -47,31 +48,45 @@ const RegisterPage = () => {
   const selectedRole = watch('role');
 
   const onSubmit = async (data) => {
+    let cred;
     try {
-      const cred = await registerUser(data.email, data.password);
-      
-      await sendEmailVerification(cred.user);
+      cred = await registerUser(data.email.trim(), data.password);
+    } catch (error) {
+      toast.error(authErrorMessage(error, 'Registration failed. Please try again.'));
+      return;
+    }
 
+    try {
+      // Create the profile first. If the rules reject it, remove the auth
+      // account so the person can try again with the same email.
       await createUserDoc(cred.user.uid, {
-        name: data.fullName,
-        email: data.email,
+        name: data.fullName.trim(),
+        email: cred.user.email, // Firebase's normalised email, matched by the rules
         role: data.role,
       });
-
-      toast.success('Account created successfully! A verification link has been sent to your email.');
-
-      if (data.role === 'trainer') {
-        navigate('/trainer/dashboard');
-      } else {
-        navigate('/member/dashboard');
-      }
     } catch (error) {
-      const msg =
-        error.code === 'auth/email-already-in-use'
-          ? 'This email is already registered.'
-          : 'Registration failed. Please try again.';
-      toast.error(msg);
+      console.error('Profile creation failed', error);
+      await deleteAuthUser(cred.user).catch(() => {});
+      toast.error('Registration failed. Please try again.');
+      return;
     }
+
+    try {
+      await sendEmailVerification(cred.user);
+    } catch (error) {
+      // The account exists; the user can resend from the login page.
+      console.error('Verification email failed', error);
+      toast.error('Account created, but the verification email could not be sent. Use "Resend" on the login page.');
+    }
+
+    // TC1 step 1: no dashboard yet. Sign out and ask them to check their inbox.
+    await logoutUser();
+    toast.success(
+      data.role === 'trainer'
+        ? 'Account created! Verify your email. An administrator will activate your trainer profile.'
+        : 'Account created! Check your inbox to verify your email.'
+    );
+    navigate('/login', { state: { registeredEmail: cred.user.email } });
   };
 
   return (

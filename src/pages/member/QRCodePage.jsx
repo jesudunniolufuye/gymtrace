@@ -35,6 +35,8 @@ const QRCodePage = () => {
 
   // Initial generation
   useEffect(() => {
+    // Temporary: QR generation moves to the server in phase 3.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     if (user?.uid) generateQRCallback();
   }, [user]);
 
