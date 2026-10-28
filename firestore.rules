@@ -10,8 +10,8 @@ rules_version = '2';
 //  - Users must have verified their email before they can touch app data.
 //    The only exceptions are creating and reading their own profile, which
 //    happen during registration before verification.
-//  - Anything not matched below is denied by default (payments, errorLogs,
-//    qrNonces, sessions, ...).
+//  - Anything not matched below is denied by default (errorLogs, qrNonces,
+//    sessions, ...).
 
 service cloud.firestore {
   match /databases/{database}/documents {
@@ -81,12 +81,15 @@ service cloud.firestore {
     }
 
     // ---------- attendance ----------
-    // Check-ins are created by staff only (moved to the server in phase 3).
-    // A member may only close (check out) their own open record.
+    // Check-ins are created only by the server (POST /api/check-in), which
+    // verifies the QR code and the member's payment. Not even an admin can
+    // create one from the browser. A member may only close (check out)
+    // their own open record.
     match /attendance/{docId} {
       allow read: if isAdmin() || (verified() && resource.data.memberId == request.auth.uid);
 
-      allow create, delete: if isAdmin();
+      allow create: if false;
+      allow delete: if isAdmin();
 
       allow update: if isAdmin()
         || (verified()

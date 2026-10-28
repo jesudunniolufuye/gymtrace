@@ -111,8 +111,12 @@ describe('attendance', () => {
   test('member cannot check themselves in', async () => {
     await assertFails(addDoc(collection(ctx('mem1'), 'attendance'), { memberId: 'mem1', memberName: 'M', checkIn: serverTimestamp(), checkOut: null, status: 'Active' }));
   });
-  test('admin can record a check-in', async () => {
-    await assertSucceeds(addDoc(collection(ctx('admin1'), 'attendance'), { memberId: 'mem1', memberName: 'M', checkIn: serverTimestamp(), checkOut: null, status: 'Active' }));
+  test('not even an admin can create a check-in from the browser (server only)', async () => {
+    await assertFails(addDoc(collection(ctx('admin1'), 'attendance'), { memberId: 'mem1', memberName: 'M', checkIn: serverTimestamp(), checkOut: null, status: 'Active' }));
+  });
+  test('qrNonces are closed to clients', async () => {
+    await assertFails(setDoc(doc(ctx('admin1'), 'qrNonces/abc'), { memberId: 'mem1' }));
+    await assertFails(getDoc(doc(ctx('admin1'), 'qrNonces/abc')));
   });
   test('member can check out of own open record only', async () => {
     await seed((db) => setDoc(doc(db, 'attendance/a1'), { memberId: 'mem1', status: 'Active', checkOut: null }));

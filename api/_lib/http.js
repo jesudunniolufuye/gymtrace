@@ -56,8 +56,13 @@ export async function requireUser(req, { roles } = {}) {
 
   let token;
   try {
-    token = await adminAuth.verifyIdToken(match[1]);
-  } catch {
+    // checkRevoked: a deactivated account's sessions stop working at once,
+    // instead of when its current token expires (up to an hour later).
+    token = await adminAuth.verifyIdToken(match[1], true);
+  } catch (error) {
+    if (error?.code === 'auth/user-disabled') {
+      throw new HttpError(403, 'This account has been deactivated. Contact the front desk.', { code: 'account-disabled' });
+    }
     throw new HttpError(401, 'Your session has expired. Please sign in again.');
   }
   if (!token.email_verified) throw new HttpError(403, 'Please verify your email first.');
@@ -65,6 +70,9 @@ export async function requireUser(req, { roles } = {}) {
   const snap = await adminDb.doc(`users/${token.uid}`).get();
   if (!snap.exists) throw new HttpError(403, 'Account profile not found.');
   const profile = snap.data();
+  if (profile.status === 'disabled') {
+    throw new HttpError(403, 'This account has been deactivated. Contact the front desk.', { code: 'account-disabled' });
+  }
   if (roles && !roles.includes(profile.role)) {
     throw new HttpError(403, 'You are not allowed to do this.');
   }
