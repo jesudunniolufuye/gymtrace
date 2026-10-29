@@ -135,6 +135,7 @@ Rough effort: 1–2 days including tests.
 
 Not done before the deadline; none of these block a soft launch.
 
+- [ ] **Void/correct a recorded payment** (today a mistake can't be undone in the app: staff note the receipt number and tell the manager; fixing it needs the developer). Should be a manager-only "void" that keeps the record and reverses the plan time.
 - [ ] Workout form: highlight missing fields in red (TC3 step 3; currently only the title is checked).
 - [ ] Payment filters (date range, method) on the admin Payments page; it shows the current month only.
 - [ ] Separate front-desk "attendant" role (fewer powers than admin).

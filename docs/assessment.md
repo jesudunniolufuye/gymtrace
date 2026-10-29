@@ -223,6 +223,18 @@ Notes:
 
 Environments: **staging** = the demo project (`gymtrace-demo`, card simulator ON); **production** = `gymtrace-prod` (simulator OFF).
 
+### Status, Thu 29 Oct, 15:05
+- **All must-haves done, tested on staging, and live in production:** daily loop, deactivation, forgot password, privacy notice (placeholders), simulator switch.
+- **Nice-to-haves done:**
+  - member booking cancel (FR16)
+  - trainer availability (FR13)
+  - dashboard "active members" and "active trainers" counts
+  - admin display name for receipts
+  - read-only prices
+  - booking date guard
+- **Docs written:** `docs/production-checklist.md`, `docs/staff-guide.md`.
+- **Still post-launch:** listed in `docs/production-checklist.md`, section 9.
+
 ### Must have by the freeze
 1. **Daily loop:** register → admin records a cash/transfer payment → member's QR → admin check-in. This includes:
    - receipts
