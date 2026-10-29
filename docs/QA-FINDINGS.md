@@ -4,6 +4,16 @@
 **Scope:** local emulator and staging freely; production **read-only** (pages, unauthenticated API calls, a read-only look at the demo data; no writes, no seed).
 **Nothing was fixed.** The only repo change is `scripts/qa-probe.mjs`, the probe script behind most of the evidence below.
 
+## Status after the fix batch (29 Oct)
+
+| Finding | Status |
+|---|---|
+| F1, F2, F4, F7 | **Fixed** with regression tests (see git log). F7 is client-side only: the rules still accept a two-space profile name. |
+| F3 | **Documented** in README, PROJECT-REPORT, QA-PREP; rules unchanged, tightening is a next step. |
+| F11, D1, D2, D3 | **Docs updated** (`staff-guide.md`, `DEMO-SCRIPT.md`). |
+| D4 | Still a to-do for the user (set the demo passwords). |
+| F5, F6, F8-F10, F12-F17 | **Not fixed**; listed under known limits in `PROJECT-REPORT.md` §6. |
+
 ## Summary
 
 - **Blockers: 0.** No way found to get free entry, forge or replay a QR code, escalate a member to admin, or read another member's data.

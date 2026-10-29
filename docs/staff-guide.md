@@ -46,7 +46,7 @@ Never check someone in without seeing their ID card. Manual check-in has no QR c
 | You see | What it means | What to do |
 |---|---|---|
 | **Access Granted** | Paid up. The visit is recorded. | Let them in. |
-| **Already Checked In** (at a time) | They were let in within the last 5 minutes. Nothing extra was charged. | Let them in. |
+| **Already Checked In** (at a time) | This member was already let in within the last 5 minutes. Nothing extra was charged. | Check that the person in front of you is the member named on screen (look at their student ID) before letting them in. If it isn't them, don't admit them. |
 | **Invalid or Expired QR Code** | The code is over a minute old (e.g. a screenshot) or isn't a GymTrace code. | Ask them to tap **Generate Qr** again and show the live code. |
 | **This QR code has already been used** | That exact code was already scanned. | Ask for the new code on their phone. |
 | **Member Not Found** | No account with that email or ID. | Check the spelling. If they never registered, they sign up first. |

@@ -12,8 +12,8 @@
   - any member could mark themselves as paid
   - QR entry codes could be forged
   - the check-in scanner never checked payment
-- I kept the existing UI (React/Vite/Firebase) and added a small server layer (Vercel functions) for payments, QR codes, check-in and account management. I rewrote the database rules, and fixed or removed the mocked features.
-- The result runs in two environments, staging and production. It's covered by 133 automated tests plus an end-to-end smoke script that runs against staging. Production holds realistic demo data.
+- I kept the existing UI (React/Vite/Firebase) and added a small server layer (Vercel functions) for payments, QR codes, check-in and account management. I rewrote the database rules, and fixed or removed most of the mocked features. A QA pass (`docs/QA-FINDINGS.md`) found leftovers on the member profile page and sidebar (a hardcoded "Premium" plan and expiry); those are now fixed.
+- The result runs in two environments, staging and production. It's covered by 155 automated tests plus an end-to-end smoke script that runs against staging. Production holds realistic demo data.
 
 ---
 
@@ -141,7 +141,7 @@ server-side profile, never from the request.
   - Prices are shown read-only.
 - **Other.**
   - Privacy notice (example organisation details, labelled as such).
-  - The broken upgrade link and the dead privacy/terms links fixed; fake ratings and mocked values removed. The landing page footer still has placeholder links.
+  - The broken upgrade link and the dead privacy/terms links fixed; fake ratings and mocked values removed. The member profile page and sidebar still showed a hardcoded "Premium" plan until the QA pass (F1) caught it; they now show the real plan. The landing page footer still has placeholder links.
   - Dependencies trimmed (5 unused packages removed) and audit-fixed for the browser bundle.
 - **Operations.**
   - `scripts/seed.mjs`: admins with random passwords, guarded by project id.
@@ -155,9 +155,9 @@ server-side profile, never from the request.
 
 | Suite | Count | What it covers | Command |
 |---|---|---|---|
-| Unit | 35 | Plan and expiry rules (incl. Lagos midnight), card validation, QR signing (tamper, expiry, wrong secret, malformed) | `npm run test:unit` |
+| Unit | 55 | Plan and expiry rules (incl. Lagos midnight), card validation, QR signing (tamper, expiry, wrong secret, malformed), plan summary text, QR refresh decisions, name validation | `npm run test:unit` |
 | Firestore rules | 45 | Who can read and write what, on the emulator | `npm test` |
-| API | 53 | Each endpoint against the Auth + Firestore emulators with real ID tokens: auth, roles, validation, idempotency, plan rules, replay, revocation, deactivation | `npm test` |
+| API | 55 | Each endpoint against the Auth + Firestore emulators with real ID tokens: auth, roles, validation, idempotency, plan rules, replay, revocation, deactivation | `npm test` |
 | Smoke (end to end) | 28 checks on staging (29 with the simulator off) | The daily loop over real HTTP with the browser SDK, so rules apply: register → verify → admin records payment → receipt/history → QR → check-in → replay refused → deactivate/reactivate → booking/availability/cancel | `npm run smoke` (see the script header for staging) |
 
 **The rules tests catch the original holes.** Running the same 45 rules tests against the original `firestore.rules` (`npm run test:old-rules`): **28 fail**. These are security failures:
@@ -195,6 +195,16 @@ NFRs: HTTPS, Firebase-managed credentials and sessions, server-side validation, 
 
 ## 6. Known limits and next steps
 
+- **Admins can write some profile fields directly (QA F3).** The rules let an admin account update any field on a user profile, including `subscription`, `role` and `status`, without a payment record. Members and trainers cannot. The payments collection is protected from everyone, but a stolen or misused admin session could grant a plan with no audit trail. Tightening this so only the server changes those fields is a next step; the rules were deliberately not changed in the QA fix batch.
+- **Found by the QA pass and not fixed** (details and repro steps in `docs/QA-FINDINGS.md`):
+  - F5/F6: booking and workout rules don't validate content (past or junk dates, very large strings); the checks are UI-only. No money or access impact.
+  - F10: two admins can deactivate each other and lock everyone out; recovery needs the developer.
+  - F12: attendance records stay "Active" unless the member checks out.
+  - F8, F9: long names stretch admin tables; the Members table needs sideways scrolling on a phone.
+  - F13: members can read trainers' email and phone.
+  - F14: reusing an idempotency key with a different body returns the first payment.
+  - F15, F16: a monthly plan bought after a day pass loses the day pass; a late-bought day pass is worth only the time until midnight.
+  - Also remaining from F7: the rules still accept a two-space profile name (the app now refuses it).
 - **No way to void a recorded payment** in the app. Staff must note the receipt number and tell a manager.
 - **All staff are full admins**; there's no separate attendant role.
 - **A shared QR code** could be used once by someone else within its 60 seconds. Staff compare the name on screen with the person, and check ID cards for manual check-in.

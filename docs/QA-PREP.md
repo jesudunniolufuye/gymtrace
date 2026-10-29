@@ -15,7 +15,7 @@ I needed *some* server: prices, payments, QR signing and check-in can't be decid
 - Code is split between `api/` and Firestore rules, so there are two enforcement layers to keep consistent.
 
 ### 3. How do the Firestore rules and the API divide responsibility?
-The browser still reads and writes Firestore directly for ordinary things (own profile name/phone, bookings, workouts), and the rules constrain it field by field. Anything granting access or recording money (payments, subscriptions, attendance, QR nonces, deactivation) is `allow write: if false` for clients and is written only by the API via `firebase-admin`, which bypasses rules. The risk is the usual one: the API is trusted code, so a bug there isn't caught by the rules. That's why the API routes through shared helpers (`requireUser`, `commitPayment`) with tests per endpoint.
+The browser still reads and writes Firestore directly for ordinary things (own profile name/phone, bookings, workouts), and the rules constrain it field by field. Anything granting access or recording money (payments, subscriptions, attendance, QR nonces, deactivation) is `allow write: if false` for clients and is written only by the API via `firebase-admin`, which bypasses rules. One exception, found in QA (F3): the `users` rule lets an **admin** account write any profile field directly, including `subscription`, `role` and `status`, with no payment record. Members and trainers can't. Restricting that to the server is a next step. The risk is the usual one: the API is trusted code, so a bug there isn't caught by the rules. That's why the API routes through shared helpers (`requireUser`, `commitPayment`) with tests per endpoint.
 
 ### 4. How does the QR code stop screenshots?
 Partly. Each code is `GT1.<payload>.<HMAC-SHA256 signature>`; the payload carries member id, a random nonce, and a 60-second expiry. The server verifies the signature before trusting anything, rejects expired codes, and burns the nonce in the same transaction as the check-in, so a code works once. So a screenshot taken yesterday fails; a screenshot used a second time fails.
@@ -30,6 +30,8 @@ What it does **not** stop: a member sending a live screenshot to a friend within
 ### 6. What's insecure or weak that remains?
 Known, not fixed:
 - A live QR can be passed to someone else within 60 seconds (Q4).
+- Admin accounts can write `subscription`, `role` and `status` on any profile directly (QA F3), bypassing the payment record. Not reachable by members; a stolen admin session could grant a plan with no audit trail.
+- Booking and workout rules don't validate content (QA F5/F6): a member can store junk dates or very large strings in their own records. No money or access impact.
 - Every staff member is a full admin: they can record payments, deactivate accounts and see all data. There's no attendant role and no approval step.
 - A mistaken payment can't be voided in the app; recorded cash/transfer payments rely on staff honesty (each is attributed to the recording account).
 - No rate limiting on our own API beyond Firebase Auth's built-in throttling; no App Check; no CAPTCHA on registration.

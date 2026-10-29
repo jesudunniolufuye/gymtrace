@@ -25,7 +25,7 @@ Browser: React 19 + Vite + Tailwind (src/)
       pay · payment-options · admin/record-payment · qr-token · check-in · admin/set-account-status
 ```
 
-- **The server decides anything that grants access or money:** prices, payments, subscriptions, QR codes, check-ins, deactivation. The browser can't write those collections or fields; the rules forbid it.
+- **The server decides anything that grants access or money:** prices, payments, subscriptions, QR codes, check-ins, deactivation. Ordinary members and trainers can't write those collections or fields; the rules forbid it. **Admin accounts are the exception**: the `users` rule lets an admin write any field on a profile directly (including `subscription`, `role` and `status`), which bypasses the payment record. Restricting that to the server is a next step (QA finding F3, `docs/QA-FINDINGS.md`).
 - **QR codes** are HMAC-SHA256-signed tokens: 60-second expiry, single use, verified only on the server.
 - **One rules module for both sides:** plan and expiry rules live in `shared/subscription.js`, used by both the browser and the API.
 
