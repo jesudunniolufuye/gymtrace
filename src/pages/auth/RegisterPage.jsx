@@ -8,10 +8,14 @@ import { toast } from 'sonner';
 import { registerUser, sendEmailVerification, logoutUser, deleteAuthUser } from '../../services/authService';
 import { createUserDoc } from '../../services/userService';
 import { authErrorMessage } from '../../lib/authErrors';
+import { validateName } from '../../../shared/name.js';
 import logo from '../../assets/logo.png';
 
 const registerSchema = z.object({
-  fullName: z.string().min(2, 'Full name must be at least 2 characters'),
+  fullName: z.string().superRefine((v, ctx) => {
+    const r = validateName(v);
+    if (!r.ok) ctx.addIssue({ code: 'custom', message: r.message });
+  }),
   email: z.string().email('Please enter a valid email address'),
   role: z.enum(['member', 'trainer']),
   password: z.string().min(6, 'Password must be at least 6 characters'),

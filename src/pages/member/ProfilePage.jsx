@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserDoc } from '../../services/userService';
 import { logoutUser } from '../../services/authService';
+import { validateName } from '../../../shared/name.js';
 import { planSummary } from '../../lib/subscription';
 
 const ProfilePage = () => {
@@ -22,9 +23,14 @@ const ProfilePage = () => {
   };
 
   const handleSave = async () => {
+    const name = validateName(formData.name);
+    if (!name.ok) {
+      toast.error(name.message);
+      return;
+    }
     try {
       await updateUserDoc(userData.uid, {
-        name: formData.name,
+        name: name.value,
         phone: formData.phone,
       });
       await refreshUserData();
