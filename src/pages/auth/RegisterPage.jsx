@@ -17,7 +17,7 @@ const registerSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
   confirmPassword: z.string().min(6, 'Confirm password must be at least 6 characters'),
   terms: z.literal(true, {
-    errorMap: () => ({ message: 'You must accept the terms and conditions' }),
+    error: 'Please confirm you have read the Privacy Notice',
   }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
@@ -220,7 +220,11 @@ const RegisterPage = () => {
                 {...register('terms')}
                 />
                 <label htmlFor="terms" className="text-sm text-slate-600 cursor-pointer">
-                I agree to the <a href="#" className="text-emerald-600 font-bold hover:underline">Terms of Service</a> and <a href="#" className="text-emerald-600 font-bold hover:underline">Privacy Policy</a>
+                I have read the{' '}
+                <a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-emerald-600 font-bold hover:underline">
+                  Privacy Notice
+                </a>{' '}
+                and agree to GymTrace using my data as it describes.
                 </label>
             </div>
             {errors.terms && (

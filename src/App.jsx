@@ -5,6 +5,7 @@ import LandingPage from './pages/public/LandingPage.jsx';
 import LoginPage from './pages/auth/LoginPage.jsx';
 import RegisterPage from './pages/auth/RegisterPage.jsx';
 import ForgotPasswordPage from './pages/auth/ForgotPasswordPage.jsx';
+import PrivacyPage from './pages/public/PrivacyPage.jsx';
 import MemberDashboard from './pages/member/MemberDashboard.jsx';
 import MemberLayout from './pages/member/layout/MemberLayout.jsx';
 import BookingPage from './pages/member/BookingPage.jsx';
@@ -36,6 +37,7 @@ function App() {
       <Routes>
         {/* Public Routes */}
         <Route path="/" element={<LandingPage />} />
+        <Route path="/privacy" element={<PrivacyPage />} />
         
         {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
