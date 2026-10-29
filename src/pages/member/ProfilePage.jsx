@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, Shield, Camera, Bell, Moon, ChevronRight, LogOut } from 'lucide-react';
+import { User, Mail, Phone, Shield, Camera, ChevronRight, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { updateUserDoc } from '../../services/userService';
 import { logoutUser } from '../../services/authService';
+import { planSummary } from '../../lib/subscription';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -39,6 +40,8 @@ const ProfilePage = () => {
     navigate('/login');
   };
 
+  const plan = planSummary(userData?.subscription);
+
   const initials = userData?.name
     ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
     : '??';
@@ -64,7 +67,7 @@ const ProfilePage = () => {
           </p>
           <div className="mt-3 inline-flex items-center px-3 py-1 rounded-full bg-emerald-50 text-emerald-700 text-xs font-semibold border border-emerald-100">
             <Shield size={12} className="mr-1.5" />
-            Premium Plan
+            {plan.label}
           </div>
         </div>
         <div className="flex gap-3">
@@ -147,14 +150,8 @@ const ProfilePage = () => {
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full blur-2xl -translate-y-1/2 translate-x-1/2"></div>
             <div className="relative z-10">
               <h3 className="text-sm font-semibold text-gray-300 uppercase tracking-wider mb-1">Current Plan</h3>
-              <div className="text-2xl font-bold mb-4">Premium Membership</div>
-              <div className="flex items-center justify-between text-sm text-gray-300 mb-6">
-                <span>Expires</span>
-                <span className="font-semibold text-white">Dec 31, 2024</span>
-              </div>
-              <button className="w-full py-2.5 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-sm font-semibold transition-colors">
-                Manage Subscription
-              </button>
+              <div className="text-2xl font-bold mb-2">{plan.label}</div>
+              <p className="text-sm text-gray-300">{plan.detail}</p>
             </div>
           </div>
 
@@ -162,28 +159,6 @@ const ProfilePage = () => {
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
             <h3 className="text-lg font-bold text-gray-900 mb-4">Settings</h3>
             <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-600">
-                    <Bell size={16} />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Notifications</span>
-                </div>
-                <div className="w-10 h-6 bg-emerald-500 rounded-full relative cursor-pointer">
-                  <div className="absolute right-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-                </div>
-              </div>
-              <div className="flex items-center justify-between p-3 bg-gray-50 rounded-xl">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center text-indigo-600">
-                    <Moon size={16} />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700">Dark Mode</span>
-                </div>
-                <div className="w-10 h-6 bg-gray-300 rounded-full relative cursor-pointer">
-                  <div className="absolute left-1 top-1 w-4 h-4 bg-white rounded-full shadow-sm"></div>
-                </div>
-              </div>
               <div className=" pt-2 border-t border-gray-100">
                 <button onClick={handleSignOut} className="w-full flex items-center justify-between p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-semibold">
                    <span>Sign Out</span>

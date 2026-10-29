@@ -45,3 +45,13 @@ export const describeSubscription = (subscription, nowMs = Date.now()) => {
   if (s.reason === "used") return "Day pass used";
   return "No active plan";
 };
+
+/** Short plan name and a detail line for profile and sidebar, from the real subscription. */
+export const planSummary = (subscription, nowMs = Date.now()) => {
+  const s = getSubscriptionStatus(subscription, nowMs);
+  return {
+    active: s.active,
+    label: s.active ? PLANS[s.plan].label : "No active plan",
+    detail: describeSubscription(subscription, nowMs),
+  };
+};

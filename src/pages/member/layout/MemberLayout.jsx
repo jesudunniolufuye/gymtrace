@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { logoutUser } from '../../../services/authService';
+import { planSummary } from '../../../lib/subscription';
 import logo from '../../../assets/logo.png';
 
 const MemberLayout = () => {
@@ -90,7 +91,7 @@ const MemberLayout = () => {
             <div className="flex-1 min-w-0">
               <p className="text-sm font-semibold text-gray-900 truncate">{userData?.name || 'Member'}</p>
               <p className="text-xs text-gray-500 truncate flex items-center gap-1">
-                Premium Member
+                {planSummary(userData?.subscription).label}
               </p>
             </div>
             <LogOut size={18} onClick={(e) => { e.preventDefault(); handleLogout(); }} className="text-gray-400 group-hover:text-red-500 transition-colors" />
