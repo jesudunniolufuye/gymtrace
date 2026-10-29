@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Users, Calendar, Star, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { Users, Calendar, CheckCircle, Clock, ArrowRight, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { getTrainerClients, getTodayTrainerBookings, getTrainerBookings } from '../../services/bookingService';
@@ -65,6 +65,7 @@ const TrainerDashboard = () => {
     const [clientCount, setClientCount] = useState(0);
     const [todayCount, setTodayCount] = useState(0);
     const [upcomingSessions, setUpcomingSessions] = useState([]);
+    const [completedCount, setCompletedCount] = useState(0);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
@@ -79,6 +80,7 @@ const TrainerDashboard = () => {
                 ]);
                 setClientCount(clients.length);
                 setTodayCount(today.length);
+                setCompletedCount(allSessions.filter((s) => s.status === 'completed').length);
                 setUpcomingSessions(
                     allSessions.filter((s) => s.status === 'upcoming').slice(0, 5)
                 );
@@ -136,11 +138,11 @@ const TrainerDashboard = () => {
                 </div>
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-gray-100 flex items-center gap-4">
                      <div className="w-12 h-12 bg-orange-50 rounded-xl flex items-center justify-center text-orange-600">
-                        <Star size={24} />
+                        <CheckCircle size={24} />
                     </div>
                     <div>
-                        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Rating</p>
-                        <p className="text-2xl font-bold text-gray-900">5.0</p>
+                        <p className="text-sm font-semibold text-gray-400 uppercase tracking-wide">Sessions Completed</p>
+                        <p className="text-2xl font-bold text-gray-900">{loading ? '…' : completedCount}</p>
                     </div>
                 </div>
             </div>

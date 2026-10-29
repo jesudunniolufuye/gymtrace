@@ -31,8 +31,8 @@ export const getAdminStats = async () => {
     const m = d.data();
     return m.status !== "disabled" && getSubscriptionStatus(m.subscription, now).active;
   }).length;
-  // Active trainer = approved and bookable.
-  const activeTrainers = trainersSnap.docs.filter((d) => d.data().status === "active").length;
+  // Active trainer = approved by the gym AND taking bookings (FR13).
+  const activeTrainers = trainersSnap.docs.filter((d) => d.data().status === "active" && d.data().available !== false).length;
 
   return {
     totalMembers: membersSnap.size,

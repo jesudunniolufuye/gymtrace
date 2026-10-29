@@ -4,10 +4,11 @@ import { toast } from 'sonner';
 import { getAllTrainers, updateTrainer } from '../../services/trainerService';
 import AccountStatusModal from './components/AccountStatusModal';
 
-// Trainer status: 'active' = approved and bookable, 'inactive' = not
-// bookable (new trainers start here until approved), 'disabled' = account
-// deactivated (cannot sign in).
-const STATUS_LABEL = { active: 'Bookable', inactive: 'Not bookable', disabled: 'Deactivated' };
+// Trainer status (set by the gym): 'active' = approved for booking,
+// 'inactive' = not approved (new trainers start here), 'disabled' = account
+// deactivated (cannot sign in). Separately, the trainer can pause new
+// bookings themselves (available: false, FR13).
+const STATUS_LABEL = { active: 'Approved', inactive: 'Not approved', disabled: 'Deactivated' };
 const STATUS_COLOR = { active: 'text-green-600', inactive: 'text-amber-600', disabled: 'text-red-600' };
 
 const TrainersPage = () => {
@@ -153,6 +154,9 @@ const TrainersPage = () => {
                   <span className={`text-xs font-medium ${STATUS_COLOR[trainer.status] ?? 'text-gray-600'}`}>
                     {STATUS_LABEL[trainer.status] ?? 'Not bookable'}
                   </span>
+                  {trainer.status === 'active' && trainer.available === false && (
+                    <span className="text-[11px] text-amber-600">Trainer has paused bookings</span>
+                  )}
                 </div>
                 <div className="flex flex-col items-center">
                   <Star size={16} className="text-yellow-500 mb-1" />
