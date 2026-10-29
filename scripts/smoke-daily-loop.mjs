@@ -23,8 +23,8 @@ import {
   signInWithCustomToken, signInWithEmailAndPassword,
 } from 'firebase/auth';
 import {
-  Timestamp, collection, connectFirestoreEmulator, doc, getDoc, getDocs, getFirestore, orderBy, query,
-  serverTimestamp, setDoc, where,
+  Timestamp, addDoc, collection, connectFirestoreEmulator, doc, getDoc, getDocs, getFirestore, orderBy, query,
+  serverTimestamp, setDoc, updateDoc, where,
 } from 'firebase/firestore';
 
 const STAGING = process.env.SMOKE_TARGET === 'staging';
@@ -103,6 +103,7 @@ async function api(auth, method, path, body) {
 
 const member = client('member');
 const admin = client('admin');
+const trainer = client('trainer');
 const email = `smoke-${randomUUID().slice(0, 8)}@example.test`;
 const password = `smoke-${randomUUID()}`;
 
@@ -193,11 +194,46 @@ try {
   await signInWithEmailAndPassword(member.auth, email, password);
   const qrBack = await api(member.auth, 'POST', 'qr-token');
   check('reactivated member: QR code works again', qrBack.status === 200);
+
+  // 8. Booking: approval, trainer availability (FR13), booking (FR14), member cancel (FR16).
+  const tEmail = `smoke-trainer-${randomUUID().slice(0, 8)}@example.test`;
+  const tPassword = `smoke-${randomUUID()}`;
+  const tCred = await createUserWithEmailAndPassword(trainer.auth, tEmail, tPassword);
+  await setDoc(doc(trainer.db, 'users', tCred.user.uid), {
+    name: 'Smoke Trainer', email: tCred.user.email, role: 'trainer', phone: '', status: 'inactive', createdAt: serverTimestamp(),
+  });
+  await verifyEmail(trainer.auth, tCred.user);
+  await signInWithEmailAndPassword(trainer.auth, tEmail, tPassword);
+  const trainerId = tCred.user.uid;
+  const tomorrow = new Date(Date.now() + 25 * 3600e3).toISOString().slice(0, 10);
+  const tryBook = async () => {
+    try {
+      const ref = await addDoc(collection(member.db, 'bookings'), {
+        memberId, memberName: 'Smoke Member', trainerId, trainerName: 'Smoke Trainer',
+        date: tomorrow, time: '09:00', sessionType: 'Personal Training', status: 'upcoming', createdAt: serverTimestamp(),
+      });
+      return ref.id;
+    } catch (error) {
+      return error.code;
+    }
+  };
+  check('cannot book a trainer awaiting approval', (await tryBook()) === 'permission-denied');
+  await updateDoc(doc(admin.db, 'users', trainerId), { status: 'active' });
+  await updateDoc(doc(trainer.db, 'users', trainerId), { available: false });
+  check('cannot book a trainer who switched availability off (FR13)', (await tryBook()) === 'permission-denied');
+  await updateDoc(doc(trainer.db, 'users', trainerId), { available: true });
+  const bookingId = await tryBook();
+  check('member books an available trainer (FR14)', typeof bookingId === 'string' && bookingId.length > 10, bookingId);
+  const memberSees = await getDocs(query(collection(member.db, 'bookings'), where('memberId', '==', memberId), orderBy('createdAt', 'desc')));
+  const trainerSees = await getDocs(query(collection(trainer.db, 'bookings'), where('trainerId', '==', trainerId), orderBy('createdAt', 'desc')));
+  check('member and trainer both see the booking', memberSees.docs.some((d) => d.id === bookingId) && trainerSees.docs.some((d) => d.id === bookingId));
+  await updateDoc(doc(member.db, 'bookings', bookingId), { status: 'cancelled' });
+  check('member cancels the booking (FR16)', (await getDoc(doc(member.db, 'bookings', bookingId))).data().status === 'cancelled');
 } catch (error) {
   failures += 1;
   console.error('FAIL  unexpected error:', error.message);
 } finally {
-  await Promise.all([deleteApp(member.app), deleteApp(admin.app)]);
+  await Promise.all([deleteApp(member.app), deleteApp(admin.app), deleteApp(trainer.app)]);
   if (STAGING) console.log(`\nTest member left in ${PROJECT}: ${email}`);
 }
 
