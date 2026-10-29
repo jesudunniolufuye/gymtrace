@@ -4,18 +4,20 @@ import { ArrowLeft } from 'lucide-react';
 import logo from '../../assets/logo.png';
 
 // ---------------------------------------------------------------------------
-// FILL THESE IN before launch, then have Babcock University's data protection
-// contact review the whole notice. Anything still in [square brackets] is
-// shown highlighted on the page so it can't be missed.
+// The details below are EXAMPLE values (this is a showcase project, not a
+// live service), each labelled "(example)". For a real deployment, replace
+// them and have the organisation's data protection officer review the whole
+// notice. A value written in [square brackets] is shown highlighted on the
+// page as an unfinished placeholder.
 // ---------------------------------------------------------------------------
 const DETAILS = {
-  controller: '[Data controller: e.g. Babcock University Fitness Centre, Ilishan-Remo, Ogun State]',
-  contactEmail: '[Privacy contact email]',
-  dpo: "[Name or office of the university's Data Protection Officer]",
-  retentionAccount: '[How long account and attendance records are kept, e.g. while you are a member plus 1 year]',
-  retentionPayments: '[How long payment records are kept, e.g. 6 years for accounting]',
-  hostingRegion: '[Region where data is stored, as set in Firebase]',
-  lastUpdated: '[Date this notice was approved]',
+  controller: 'Babcock University Fitness Centre, Ilishan-Remo, Ogun State (example)',
+  contactEmail: 'privacy@fitness.babcock.example (example)',
+  dpo: 'Data Protection Officer, Babcock University (example)',
+  retentionAccount: 'while you are a member, plus 1 year after your last visit (example)',
+  retentionPayments: '6 years after the payment, for accounting (example)',
+  hostingRegion: 'Google Cloud data centres in the United States (example)',
+  lastUpdated: '29 October 2026 (example)',
 };
 
 /** Shows a value; unfilled [placeholders] are highlighted. */
@@ -33,7 +35,7 @@ const Section = ({ title, children }) => (
 
 /**
  * Privacy notice, linked from registration. Describes what GymTrace
- * actually stores. Placeholders above must be completed before launch.
+ * actually stores; organisation-specific details are the examples above.
  */
 const PrivacyPage = () => (
   <div className="min-h-screen bg-slate-50 py-10 px-4">
