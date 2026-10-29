@@ -23,7 +23,8 @@ const port = Number(process.env.API_PORT || 3001);
 http
   .createServer(async (req, res) => {
     const { pathname } = new URL(req.url, 'http://localhost');
-    const match = /^\/api\/([a-z0-9-]+)$/.exec(pathname);
+    // /api/<name> or /api/<folder>/<name>, mirroring Vercel's file routes.
+    const match = /^\/api\/((?:[a-z0-9-]+\/)?[a-z0-9-]+)$/.exec(pathname);
     const file = match && path.join(apiDir, `${match[1]}.js`);
     if (!file || !existsSync(file)) {
       res.statusCode = 404;

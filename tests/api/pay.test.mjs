@@ -99,6 +99,7 @@ describe('POST /api/pay: outcomes', () => {
     assert.equal(r.body.payment.amount, 25000);
     assert.equal(r.body.payment.status, 'success');
     assert.equal(r.body.payment.cardLast4, '4081');
+    assert.equal(r.body.payment.method, 'card');
     assert.match(r.body.payment.reference, /^GT-\d{8}-[0-9A-F]{6}$/);
 
     const user = await getUser(m.uid);
