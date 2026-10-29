@@ -5,11 +5,9 @@ import { RefreshCw, Shield, User, Clock, Lightbulb, CalendarCheck, Headset, Lock
 import { useAuth } from '../../context/AuthContext';
 import { apiPost, ApiError } from '../../services/apiClient';
 import { describeSubscription } from '../../lib/subscription';
+import { afterRefreshFailure, shouldRefresh } from '../../lib/qrRefresh';
 import logo from '../../assets/logo.png';
 
-// Ask for the next code a few seconds before the current one expires, so the
-// member never shows a code that dies while the staff member is scanning.
-const REFRESH_BEFORE_MS = 5000;
 
 /**
  * Entry QR code (FR8, FR9). The code is a short-lived token signed by the
@@ -27,25 +25,42 @@ const QRCodePage = () => {
   const [now, setNow] = useState(() => Date.now());
   const [version, setVersion] = useState(0); // bump to fetch a new code
 
+  const [refreshFailed, setRefreshFailed] = useState(false); // a refresh failed but the shown code is still valid
+
   const expiresAtRef = useRef(null);
   const fetchingRef = useRef(false);
+  const lastAttemptRef = useRef(0);
+  const qrRef = useRef(null);
 
   useEffect(() => {
     if (!user) return undefined;
     let cancelled = false;
     fetchingRef.current = true;
+    lastAttemptRef.current = Date.now();
     apiPost('qr-token')
       .then((data) => {
         if (cancelled) return;
         expiresAtRef.current = data.expiresAt;
-        setQr({ token: data.token, expiresAt: data.expiresAt });
+        qrRef.current = { token: data.token, expiresAt: data.expiresAt };
+        setQr(qrRef.current);
+        setRefreshFailed(false);
         setView('ready');
       })
       .catch((error) => {
         if (cancelled) return;
+        const status = error instanceof ApiError ? error.status : undefined;
+        const outcome = afterRefreshFailure({ qr: qrRef.current, now: Date.now(), status });
+        if (outcome === 'keep') {
+          // The code on screen still works: keep it, and the tick retries.
+          console.error('Could not refresh QR code; keeping the current one', error);
+          setRefreshFailed(true);
+          return;
+        }
         expiresAtRef.current = null;
+        qrRef.current = null;
         setQr(null);
-        if (error instanceof ApiError && error.status === 403) {
+        setRefreshFailed(false);
+        if (outcome === 'no-access') {
           setView('no-access');
           setMessage(error.message);
         } else {
@@ -67,7 +82,7 @@ const QRCodePage = () => {
     const timer = setInterval(() => {
       const t = Date.now();
       setNow(t);
-      if (expiresAtRef.current && expiresAtRef.current - t <= REFRESH_BEFORE_MS && !fetchingRef.current) {
+      if (shouldRefresh({ expiresAt: expiresAtRef.current, now: t, fetching: fetchingRef.current, lastAttemptAt: lastAttemptRef.current })) {
         fetchingRef.current = true;
         setVersion((v) => v + 1);
       }
@@ -161,6 +176,12 @@ const QRCodePage = () => {
                   0:{String(secondsLeft).padStart(2, '0')}
                 </h2>
               </div>
+
+              {refreshFailed && (
+                <p className="text-xs text-amber-600 font-medium mb-3 text-center" role="status">
+                  Couldn't get a new code. Trying again…
+                </p>
+              )}
 
               <button
                 onClick={() => setVersion((v) => v + 1)}
