@@ -16,7 +16,7 @@ export const authErrorMessage = (error, fallback = "Something went wrong. Please
     case "auth/network-request-failed":
       return "Network error. Check your connection and try again.";
     case "auth/user-disabled":
-      return "This account has been disabled. Contact the gym administrator.";
+      return "This account has been deactivated. Please contact the Fitness Centre front desk.";
     default:
       return fallback;
   }

@@ -6,7 +6,6 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -27,17 +26,4 @@ export const getAllTrainers = async () => {
 export const updateTrainer = async (uid, fields) => {
   const userRef = doc(db, "users", uid);
   await updateDoc(userRef, fields);
-};
-
-/**
- * Delete a trainer's Firestore document.
- */
-export const deleteTrainer = async (uid) => {
-  const userRef = doc(db, "users", uid);
-  await deleteDoc(userRef);
-
-  // TODO: BUG-09 - Delete Firebase Auth account
-  console.warn("Need Admin SDK or Cloud Function to actually delete Firebase Auth account.");
-  // Mock Cloud Function call:
-  // await fetch('/api/delete-user', { method: 'POST', body: JSON.stringify({ uid }) });
 };

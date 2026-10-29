@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Edit, Trash2, User, X, Loader2, Banknote } from 'lucide-react';
+import { Search, Edit, User, X, Loader2, Banknote, UserX, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllMembers, updateMember, deleteMember } from '../../services/memberService';
+import { getAllMembers, updateMember } from '../../services/memberService';
 import RecordPaymentModal from './components/RecordPaymentModal';
+import AccountStatusModal from './components/AccountStatusModal';
 import { PLANS, formatDate as formatLagosDate, getSubscriptionStatus } from '../../lib/subscription';
 
 /** FR18: each member's real plan, from the server-written subscription. */
@@ -43,7 +44,7 @@ const MembersPage = () => {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editModal, setEditModal] = useState(null);
-  const [deleteModal, setDeleteModal] = useState(null);
+  const [statusFor, setStatusFor] = useState(null); // member being (de)activated
   const [saving, setSaving] = useState(false);
   const [recordFor, setRecordFor] = useState(null); // member receiving a payment
   const [now, setNow] = useState(() => Date.now());
@@ -75,7 +76,6 @@ const MembersPage = () => {
       name: member.name || '',
       email: member.email || '',
       phone: member.phone || '',
-      status: member.status || 'active',
     });
   };
 
@@ -86,7 +86,6 @@ const MembersPage = () => {
       await updateMember(editModal.uid, {
         name: editModal.name,
         phone: editModal.phone,
-        status: editModal.status,
       });
       toast.success('Member updated');
       setEditModal(null);
@@ -94,22 +93,6 @@ const MembersPage = () => {
     } catch (error) {
       console.error(error);
       toast.error('Failed to update member');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleteModal) return;
-    setSaving(true);
-    try {
-      await deleteMember(deleteModal.uid);
-      toast.success('Member removed');
-      setDeleteModal(null);
-      await fetchMembers();
-    } catch (error) {
-      console.error(error);
-      toast.error('Failed to delete member');
     } finally {
       setSaving(false);
     }
@@ -191,12 +174,15 @@ const MembersPage = () => {
                       <PlanBadge subscription={member.subscription} now={now} />
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        member.status === 'active'
-                          ? 'bg-green-50 text-green-700 border-green-100'
-                          : 'bg-red-50 text-red-700 border-red-100'
-                      }`}>
-                        {member.status === 'active' ? 'Active' : 'Inactive'}
+                      <span
+                        title={member.status === 'disabled' && member.deactivationReason ? `Reason: ${member.deactivationReason}` : undefined}
+                        className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                          member.status === 'disabled'
+                            ? 'bg-red-50 text-red-700 border-red-100'
+                            : 'bg-green-50 text-green-700 border-green-100'
+                        }`}
+                      >
+                        {member.status === 'disabled' ? 'Deactivated' : 'Active'}
                       </span>
                     </td>
                     <td className="px-6 py-4 text-sm text-gray-500">
@@ -206,7 +192,9 @@ const MembersPage = () => {
                       <div className="flex items-center justify-end gap-2">
                         <button
                           onClick={() => setRecordFor(member)}
-                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors whitespace-nowrap"
+                          disabled={member.status === 'disabled'}
+                          title={member.status === 'disabled' ? 'Reactivate the account first' : undefined}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed"
                         >
                           <Banknote size={16} />
                           Record payment
@@ -218,13 +206,25 @@ const MembersPage = () => {
                         >
                           <Edit size={18} />
                         </button>
-                        <button
-                          aria-label={`Delete ${member.name}`}
-                          onClick={() => setDeleteModal(member)}
-                          className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                        >
-                          <Trash2 size={18} />
-                        </button>
+                        {member.status === 'disabled' ? (
+                          <button
+                            aria-label={`Reactivate ${member.name}`}
+                            title="Reactivate"
+                            onClick={() => setStatusFor(member)}
+                            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          >
+                            <UserCheck size={18} />
+                          </button>
+                        ) : (
+                          <button
+                            aria-label={`Deactivate ${member.name}`}
+                            title="Deactivate"
+                            onClick={() => setStatusFor(member)}
+                            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          >
+                            <UserX size={18} />
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -267,20 +267,9 @@ const MembersPage = () => {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
-              <p className="text-xs text-gray-500">Plans change only through payments: use “Record payment”.</p>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Status</label>
-                  <select
-                    value={editModal.status}
-                    onChange={(e) => setEditModal({ ...editModal, status: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  >
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
-              </div>
+              <p className="text-xs text-gray-500">
+                Plans change only through payments (“Record payment”). To block access, use Deactivate.
+              </p>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -302,26 +291,8 @@ const MembersPage = () => {
         />
       )}
 
-      {/* Delete Confirmation Modal */}
-      {deleteModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setDeleteModal(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-              <Trash2 className="text-red-600" size={24} />
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-bold text-gray-900">Delete Member</h2>
-              <p className="text-sm text-gray-500 mt-1">Are you sure you want to remove <span className="font-medium text-gray-700">{deleteModal.name}</span>? This action cannot be undone.</p>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteModal(null)} className="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors">Cancel</button>
-              <button onClick={handleDelete} disabled={saving} className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                {saving && <Loader2 size={16} className="animate-spin" />}
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {statusFor && (
+        <AccountStatusModal user={statusFor} onClose={() => setStatusFor(null)} onDone={() => fetchMembers()} />
       )}
     </div>
   );

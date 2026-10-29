@@ -6,7 +6,6 @@ import {
   getDocs,
   doc,
   updateDoc,
-  deleteDoc,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
 
@@ -27,18 +26,4 @@ export const getAllMembers = async () => {
 export const updateMember = async (uid, fields) => {
   const userRef = doc(db, "users", uid);
   await updateDoc(userRef, fields);
-};
-
-/**
- * Delete a member's Firestore document.
- * Note: This does NOT delete the Firebase Auth account.
- */
-export const deleteMember = async (uid) => {
-  const userRef = doc(db, "users", uid);
-  await deleteDoc(userRef);
-
-  // TODO: BUG-09 - Delete Firebase Auth account
-  console.warn("Need Admin SDK or Cloud Function to actually delete Firebase Auth account.");
-  // Mock Cloud Function call:
-  // await fetch('/api/delete-user', { method: 'POST', body: JSON.stringify({ uid }) });
 };

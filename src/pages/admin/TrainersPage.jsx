@@ -1,15 +1,23 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Star, Users, Briefcase, Edit, Trash2, X, Loader2 } from 'lucide-react';
+import { Search, Star, Users, Briefcase, Edit, X, Loader2, UserX, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
-import { getAllTrainers, updateTrainer, deleteTrainer } from '../../services/trainerService';
+import { getAllTrainers, updateTrainer } from '../../services/trainerService';
+import AccountStatusModal from './components/AccountStatusModal';
+
+// Trainer status: 'active' = approved and bookable, 'inactive' = not
+// bookable (new trainers start here until approved), 'disabled' = account
+// deactivated (cannot sign in).
+const STATUS_LABEL = { active: 'Bookable', inactive: 'Not bookable', disabled: 'Deactivated' };
+const STATUS_COLOR = { active: 'text-green-600', inactive: 'text-amber-600', disabled: 'text-red-600' };
 
 const TrainersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [editModal, setEditModal] = useState(null);
-  const [deleteModal, setDeleteModal] = useState(null);
+  const [statusFor, setStatusFor] = useState(null); // trainer being (de)activated
   const [saving, setSaving] = useState(false);
+  const [approving, setApproving] = useState(null); // uid being approved/hidden
 
   const fetchTrainers = async () => {
     try {
@@ -37,7 +45,6 @@ const TrainersPage = () => {
       email: trainer.email || '',
       phone: trainer.phone || '',
       specialty: trainer.specialty || '',
-      status: trainer.status || 'active',
     });
   };
 
@@ -49,7 +56,6 @@ const TrainersPage = () => {
         name: editModal.name,
         phone: editModal.phone,
         specialty: editModal.specialty,
-        status: editModal.status,
       });
       toast.success('Trainer updated');
       setEditModal(null);
@@ -61,18 +67,18 @@ const TrainersPage = () => {
     }
   };
 
-  const handleDelete = async () => {
-    if (!deleteModal) return;
-    setSaving(true);
+  // Approve a trainer for booking, or hide them from the booking page (FR13 admin side).
+  const setBookable = async (trainer, bookable) => {
+    setApproving(trainer.uid);
     try {
-      await deleteTrainer(deleteModal.uid);
-      toast.success('Trainer removed');
-      setDeleteModal(null);
+      await updateTrainer(trainer.uid, { status: bookable ? 'active' : 'inactive' });
+      toast.success(bookable ? `${trainer.name} can now be booked` : `${trainer.name} is hidden from booking`);
       await fetchTrainers();
-    } catch (error) { console.error(error);
-      toast.error('Failed to delete trainer');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to update trainer');
     } finally {
-      setSaving(false);
+      setApproving(null);
     }
   };
 
@@ -118,13 +124,19 @@ const TrainersPage = () => {
           {filteredTrainers.map((trainer) => (
             <div key={trainer.uid} className="bg-white rounded-xl border border-gray-100 shadow-sm p-6 flex flex-col items-center text-center hover:shadow-md transition-shadow relative group">
               {/* Actions */}
-              <div className="absolute top-3 right-3 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                <button onClick={() => handleEdit(trainer)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
+              <div className="absolute top-3 right-3 flex gap-1">
+                <button aria-label={`Edit ${trainer.name}`} onClick={() => handleEdit(trainer)} className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors">
                   <Edit size={16} />
                 </button>
-                <button onClick={() => setDeleteModal(trainer)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
-                  <Trash2 size={16} />
-                </button>
+                {trainer.status === 'disabled' ? (
+                  <button aria-label={`Reactivate ${trainer.name}`} title="Reactivate" onClick={() => setStatusFor(trainer)} className="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors">
+                    <UserCheck size={16} />
+                  </button>
+                ) : (
+                  <button aria-label={`Deactivate ${trainer.name}`} title="Deactivate" onClick={() => setStatusFor(trainer)} className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                    <UserX size={16} />
+                  </button>
+                )}
               </div>
 
               <div className="w-24 h-24 rounded-full bg-orange-100 mb-4 flex items-center justify-center text-orange-600 text-2xl font-semibold">
@@ -138,8 +150,8 @@ const TrainersPage = () => {
                 <div className="flex flex-col items-center">
                   <Briefcase size={16} className="text-purple-500 mb-1" />
                   <span className="text-xs text-gray-500">Status</span>
-                  <span className={`text-xs font-medium ${trainer.status === 'active' ? 'text-green-600' : 'text-gray-600'}`}>
-                    {trainer.status === 'active' ? 'Active' : 'Inactive'}
+                  <span className={`text-xs font-medium ${STATUS_COLOR[trainer.status] ?? 'text-gray-600'}`}>
+                    {STATUS_LABEL[trainer.status] ?? 'Not bookable'}
                   </span>
                 </div>
                 <div className="flex flex-col items-center">
@@ -149,9 +161,21 @@ const TrainersPage = () => {
                 </div>
               </div>
 
-              <button onClick={() => handleEdit(trainer)} className="w-full py-2 px-4 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50 transition-colors">
-                View Profile
-              </button>
+              {trainer.status === 'disabled' ? (
+                <p className="w-full py-2 text-sm text-gray-500">Reactivate to make changes</p>
+              ) : (
+                <button
+                  onClick={() => setBookable(trainer, trainer.status !== 'active')}
+                  disabled={approving === trainer.uid}
+                  className={`w-full py-2 px-4 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 ${
+                    trainer.status === 'active'
+                      ? 'border border-gray-200 text-gray-600 hover:bg-gray-50'
+                      : 'bg-green-600 text-white hover:bg-green-700'
+                  }`}
+                >
+                  {trainer.status === 'active' ? 'Hide from booking' : 'Approve for booking'}
+                </button>
+              )}
             </div>
           ))}
         </div>
@@ -179,18 +203,9 @@ const TrainersPage = () => {
                 <label className="text-sm font-medium text-gray-700 block mb-1">Phone</label>
                 <input type="tel" value={editModal.phone} onChange={(e) => setEditModal({ ...editModal, phone: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Specialty</label>
-                  <input type="text" value={editModal.specialty} onChange={(e) => setEditModal({ ...editModal, specialty: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Status</label>
-                  <select value={editModal.status} onChange={(e) => setEditModal({ ...editModal, status: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white">
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                  </select>
-                </div>
+              <div>
+                <label className="text-sm font-medium text-gray-700 block mb-1">Specialty</label>
+                <input type="text" value={editModal.specialty} onChange={(e) => setEditModal({ ...editModal, specialty: e.target.value })} className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" />
               </div>
             </div>
 
@@ -205,26 +220,8 @@ const TrainersPage = () => {
         </div>
       )}
 
-      {/* Delete Modal */}
-      {deleteModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setDeleteModal(null)}>
-          <div className="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-            <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto">
-              <Trash2 className="text-red-600" size={24} />
-            </div>
-            <div className="text-center">
-              <h2 className="text-lg font-bold text-gray-900">Delete Trainer</h2>
-              <p className="text-sm text-gray-500 mt-1">Remove <span className="font-medium text-gray-700">{deleteModal.name}</span> from the system? This cannot be undone.</p>
-            </div>
-            <div className="flex gap-3">
-              <button onClick={() => setDeleteModal(null)} className="flex-1 py-2 border border-gray-200 rounded-lg text-gray-600 font-medium hover:bg-gray-50 transition-colors">Cancel</button>
-              <button onClick={handleDelete} disabled={saving} className="flex-1 py-2 bg-red-600 text-white rounded-lg font-medium hover:bg-red-700 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
-                {saving && <Loader2 size={16} className="animate-spin" />}
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
+      {statusFor && (
+        <AccountStatusModal user={statusFor} onClose={() => setStatusFor(null)} onDone={() => fetchTrainers()} />
       )}
     </div>
   );

@@ -48,6 +48,25 @@ const ProtectedRoute = ({ allowedRoles, children }) => {
     );
   }
 
+  if (userData.status === 'disabled') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-6">
+        <div className="max-w-sm text-center bg-white rounded-2xl border border-gray-200 p-8 shadow-sm">
+          <h1 className="text-lg font-bold text-gray-900 mb-2">Account deactivated</h1>
+          <p className="text-sm text-gray-500 mb-6">
+            This account has been deactivated by the gym administrator. Please contact the Fitness Centre front desk.
+          </p>
+          <button
+            onClick={() => logoutUser()}
+            className="px-4 py-2 rounded-lg bg-emerald-500 text-white font-semibold hover:bg-emerald-600"
+          >
+            Sign out
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   if (allowedRoles && !allowedRoles.includes(userData.role)) {
     return <Navigate to={dashboardPath(userData.role)} replace />;
   }
