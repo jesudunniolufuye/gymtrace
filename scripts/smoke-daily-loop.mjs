@@ -165,6 +165,34 @@ try {
   check('repeat manual check-in reported, not logged twice', repeat.status === 200 && repeat.body.duplicate === true);
   const visits = await getDocs(query(collection(member.db, 'attendance'), where('memberId', '==', memberId)));
   check('member sees exactly one check-in', visits.size === 1, `${visits.size} record(s)`);
+
+  // 7. Deactivate → locked out everywhere; reactivate → back in.
+  await new Promise((r) => setTimeout(r, 1100)); // session revocation compares whole seconds
+  const off = await api(admin.auth, 'POST', 'admin/set-account-status', { userId: memberId, action: 'deactivate', reason: 'smoke test' });
+  check('admin deactivates the member', off.status === 200 && off.body.status === 'disabled');
+  const qrAfter = await api(member.auth, 'POST', 'qr-token');
+  check('deactivated member: open session refused by the API', qrAfter.status === 401 || qrAfter.status === 403, `HTTP ${qrAfter.status}`);
+  const scanAfter = await api(admin.auth, 'POST', 'check-in', { member: email });
+  check('deactivated member: check-in refused', scanAfter.status === 403 && scanAfter.body.code === 'account-disabled');
+  let readError = 'none';
+  try {
+    await getDocs(query(collection(member.db, 'payments'), where('memberId', '==', memberId)));
+  } catch (error) {
+    readError = error.code;
+  }
+  check('deactivated member: database reads refused by the rules', readError === 'permission-denied', readError);
+  let loginError = 'none';
+  try {
+    await signInWithEmailAndPassword(member.auth, email, password);
+  } catch (error) {
+    loginError = error.code;
+  }
+  check('deactivated member: login refused', loginError === 'auth/user-disabled', loginError);
+  const on = await api(admin.auth, 'POST', 'admin/set-account-status', { userId: memberId, action: 'reactivate' });
+  check('admin reactivates the member', on.status === 200 && on.body.status === 'active');
+  await signInWithEmailAndPassword(member.auth, email, password);
+  const qrBack = await api(member.auth, 'POST', 'qr-token');
+  check('reactivated member: QR code works again', qrBack.status === 200);
 } catch (error) {
   failures += 1;
   console.error('FAIL  unexpected error:', error.message);
