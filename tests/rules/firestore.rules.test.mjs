@@ -177,3 +177,37 @@ describe('removed collections', () => {
     await assertFails(addDoc(collection(ctx('tr1'), 'sessions'), { trainerId: 'tr1' }));
   });
 });
+
+describe('deactivated accounts', () => {
+  beforeEach(async () => {
+    await seed(async (db) => {
+      await setDoc(doc(db, 'users/gone1'), { name: 'Gone Member', email: 'gone1@test.dev', role: 'member', status: 'disabled', phone: '' });
+      await setDoc(doc(db, 'users/goneAdmin'), { name: 'Gone Admin', email: 'goneAdmin@test.dev', role: 'admin', status: 'disabled', phone: '' });
+      await setDoc(doc(db, 'attendance/g1'), { memberId: 'gone1', status: 'Active' });
+      await setDoc(doc(db, 'payments/gone1_a'), { memberId: 'gone1', amount: 500, status: 'success' });
+      await setDoc(doc(db, 'workouts/gw1'), { memberId: 'gone1', title: 'Old' });
+    });
+  });
+  test('can still read their own profile (to see they are deactivated)', async () => {
+    await assertSucceeds(getDoc(doc(ctx('gone1'), 'users/gone1')));
+  });
+  test('cannot edit their profile', async () => {
+    await assertFails(updateDoc(doc(ctx('gone1'), 'users/gone1'), { name: 'Back Again' }));
+  });
+  test('cannot read their attendance, payments or workouts', async () => {
+    await assertFails(getDoc(doc(ctx('gone1'), 'attendance/g1')));
+    await assertFails(getDoc(doc(ctx('gone1'), 'payments/gone1_a')));
+    await assertFails(getDoc(doc(ctx('gone1'), 'workouts/gw1')));
+  });
+  test('cannot book, log workouts or list trainers', async () => {
+    await assertFails(addDoc(collection(ctx('gone1'), 'bookings'), booking('gone1', 'tr1')));
+    await assertFails(addDoc(collection(ctx('gone1'), 'workouts'), {
+      memberId: 'gone1', title: 'x', duration: '1', calories: '1', difficulty: 'x', date: '2026-10-29', exercises: [], createdAt: new Date(),
+    }));
+    await assertFails(getDocs(query(collection(ctx('gone1'), 'users'), where('role', '==', 'trainer'))));
+  });
+  test('a deactivated admin has no admin powers', async () => {
+    await assertFails(getDocs(query(collection(ctx('goneAdmin'), 'users'), where('role', '==', 'member'))));
+    await assertFails(updateDoc(doc(ctx('goneAdmin'), 'users/mem1'), { name: 'Changed' }));
+  });
+});

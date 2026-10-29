@@ -7,9 +7,10 @@ rules_version = '2';
 //    (role, subscription, payments, attendance) is written only by the server
 //    (Vercel API functions using firebase-admin, which bypasses these rules)
 //    or by an admin.
-//  - Users must have verified their email before they can touch app data.
-//    The only exceptions are creating and reading their own profile, which
-//    happen during registration before verification.
+//  - Users must have verified their email, and not be deactivated, before
+//    they can touch app data. The only exceptions are creating and reading
+//    their own profile (registration happens before verification, and a
+//    deactivated user needs to see that they are deactivated).
 //  - Anything not matched below is denied by default (errorLogs, qrNonces,
 //    sessions, ...).
 
@@ -26,6 +27,14 @@ service cloud.firestore {
       return signedIn() && request.auth.token.email_verified == true;
     }
 
+    // Verified email AND an account that an admin has not deactivated.
+    // A deactivated user can still read their own profile (to see why).
+    function active() {
+      return verified()
+        && exists(/databases/$(database)/documents/users/$(request.auth.uid))
+        && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.status != 'disabled';
+    }
+
     function isSelf(uid) {
       return signedIn() && request.auth.uid == uid;
     }
@@ -35,13 +44,12 @@ service cloud.firestore {
     }
 
     function hasRole(role) {
-      return verified()
+      return active()
         && exists(/databases/$(database)/documents/users/$(request.auth.uid))
         && myProfile().role == role;
     }
 
-    function isAdmin()   { return hasRole('admin'); }
-    function isTrainer() { return hasRole('trainer'); }
+    function isAdmin() { return hasRole('admin'); }
 
     function changedOnly(fields) {
       return request.resource.data.diff(resource.data).affectedKeys().hasOnly(fields);
@@ -57,7 +65,7 @@ service cloud.firestore {
     match /users/{userId} {
       allow read: if isSelf(userId)
         || isAdmin()
-        || (verified() && resource.data.role == 'trainer');
+        || (active() && resource.data.role == 'trainer');
 
       allow create: if isSelf(userId)
         && request.resource.data.keys().hasOnly(['name', 'email', 'role', 'phone', 'status', 'createdAt'])
@@ -72,7 +80,7 @@ service cloud.firestore {
         );
 
       allow update: if isAdmin()
-        || (isSelf(userId) && verified()
+        || (isSelf(userId) && active()
             && changedOnly(['name', 'phone'])
             && validName(request.resource.data.name)
             && validPhone(request.resource.data.phone));
@@ -86,13 +94,13 @@ service cloud.firestore {
     // create one from the browser. A member may only close (check out)
     // their own open record.
     match /attendance/{docId} {
-      allow read: if isAdmin() || (verified() && resource.data.memberId == request.auth.uid);
+      allow read: if isAdmin() || (active() && resource.data.memberId == request.auth.uid);
 
       allow create: if false;
       allow delete: if isAdmin();
 
       allow update: if isAdmin()
-        || (verified()
+        || (active()
             && resource.data.memberId == request.auth.uid
             && resource.data.status == 'Active'
             && changedOnly(['checkOut', 'status'])
@@ -105,10 +113,10 @@ service cloud.firestore {
     // a member can make is cancelling; a trainer can complete or cancel.
     match /bookings/{docId} {
       allow read: if isAdmin()
-        || (verified() && (resource.data.memberId == request.auth.uid
+        || (active() && (resource.data.memberId == request.auth.uid
                            || resource.data.trainerId == request.auth.uid));
 
-      allow create: if verified()
+      allow create: if active()
         && request.resource.data.memberId == request.auth.uid
         && request.resource.data.keys().hasOnly(['memberId', 'memberName', 'trainerId', 'trainerName',
                                                  'date', 'time', 'sessionType', 'status', 'createdAt'])
@@ -122,7 +130,7 @@ service cloud.firestore {
         && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.status == 'active';
 
       allow update: if isAdmin()
-        || (verified() && resource.data.status == 'upcoming' && changedOnly(['status']) && (
+        || (active() && resource.data.status == 'upcoming' && changedOnly(['status']) && (
               (resource.data.memberId == request.auth.uid
                  && request.resource.data.status == 'cancelled') ||
               (resource.data.trainerId == request.auth.uid
@@ -135,9 +143,9 @@ service cloud.firestore {
     // ---------- workouts ----------
     // Personal logs: only the owner can read or change them.
     match /workouts/{docId} {
-      allow read, delete: if verified() && resource.data.memberId == request.auth.uid;
+      allow read, delete: if active() && resource.data.memberId == request.auth.uid;
 
-      allow create: if verified()
+      allow create: if active()
         && request.resource.data.memberId == request.auth.uid
         && request.resource.data.keys().hasOnly(['memberId', 'title', 'duration', 'calories',
                                                  'difficulty', 'date', 'exercises', 'createdAt'])
@@ -145,7 +153,7 @@ service cloud.firestore {
         && request.resource.data.title.size() >= 1 && request.resource.data.title.size() <= 100
         && request.resource.data.exercises is list && request.resource.data.exercises.size() <= 50;
 
-      allow update: if verified()
+      allow update: if active()
         && resource.data.memberId == request.auth.uid
         && request.resource.data.memberId == request.auth.uid;
     }
@@ -153,13 +161,13 @@ service cloud.firestore {
     // ---------- payments ----------
     // Written only by the server (phase 2). Members can read their own.
     match /payments/{docId} {
-      allow read: if isAdmin() || (verified() && resource.data.memberId == request.auth.uid);
+      allow read: if isAdmin() || (active() && resource.data.memberId == request.auth.uid);
       allow write: if false;
     }
 
     // ---------- settings ----------
     match /settings/{docId} {
-      allow read: if verified();
+      allow read: if active();
       allow write: if isAdmin();
     }
   }
