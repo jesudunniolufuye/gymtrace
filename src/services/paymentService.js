@@ -15,6 +15,12 @@ export const getPayment = async (paymentId) => {
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
 };
 
+/**
+ * Admin: record a cash or bank-transfer payment taken at the front desk.
+ * body: { memberId, plan, method, amount, externalReference, note, idempotencyKey }
+ */
+export const recordFrontDeskPayment = (body) => apiPost("admin/record-payment", body);
+
 /** Which checkout to offer: { cardSimulator: boolean } (off in production). */
 export const getPaymentOptions = () => apiGet("payment-options");
 

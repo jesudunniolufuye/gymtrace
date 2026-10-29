@@ -1,7 +1,42 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit, Trash2, User, Filter, X, Loader2 } from 'lucide-react';
+import { Search, Edit, Trash2, User, X, Loader2, Banknote } from 'lucide-react';
 import { toast } from 'sonner';
 import { getAllMembers, updateMember, deleteMember } from '../../services/memberService';
+import RecordPaymentModal from './components/RecordPaymentModal';
+import { PLANS, formatDate as formatLagosDate, getSubscriptionStatus } from '../../lib/subscription';
+
+/** FR18: each member's real plan, from the server-written subscription. */
+const PlanBadge = ({ subscription, now }) => {
+  const s = getSubscriptionStatus(subscription, now);
+  if (s.active) {
+    const detail = s.plan === 'monthly' ? `until ${formatLagosDate(s.expiresAt)}` : `${s.credits} entr${s.credits === 1 ? 'y' : 'ies'} today`;
+    return (
+      <div>
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-green-50 text-green-700 border-green-100">
+          {PLANS[s.plan].label}
+        </span>
+        <div className="text-xs text-gray-500 mt-1">{detail}</div>
+      </div>
+    );
+  }
+  if (s.reason === 'expired' || s.reason === 'used') {
+    return (
+      <div>
+        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-amber-50 text-amber-700 border-amber-100">
+          {s.reason === 'used' ? 'Day pass used' : `${s.label} expired`}
+        </span>
+        {s.reason === 'expired' && s.plan === 'monthly' && (
+          <div className="text-xs text-gray-500 mt-1">on {formatLagosDate(s.expiresAt)}</div>
+        )}
+      </div>
+    );
+  }
+  return (
+    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border bg-gray-50 text-gray-600 border-gray-200">
+      No plan
+    </span>
+  );
+};
 
 const MembersPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
@@ -10,12 +45,15 @@ const MembersPage = () => {
   const [editModal, setEditModal] = useState(null);
   const [deleteModal, setDeleteModal] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [recordFor, setRecordFor] = useState(null); // member receiving a payment
+  const [now, setNow] = useState(() => Date.now());
 
   const fetchMembers = async () => {
     try {
       setLoading(true);
       const data = await getAllMembers();
       setMembers(data);
+      setNow(Date.now());
     } catch (error) {
       console.error(error);
       toast.error('Failed to load members');
@@ -38,7 +76,6 @@ const MembersPage = () => {
       email: member.email || '',
       phone: member.phone || '',
       status: member.status || 'active',
-      plan: member.plan || 'Basic',
     });
   };
 
@@ -50,7 +87,6 @@ const MembersPage = () => {
         name: editModal.name,
         phone: editModal.phone,
         status: editModal.status,
-        plan: editModal.plan,
       });
       toast.success('Member updated');
       setEditModal(null);
@@ -90,7 +126,7 @@ const MembersPage = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Member Management</h1>
-          <p className="text-gray-500">Manage gym members and their subscriptions</p>
+          <p className="text-gray-500">Members, their plans, and front-desk payments</p>
         </div>
       </div>
 
@@ -152,13 +188,7 @@ const MembersPage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                        member.plan === 'Premium'
-                          ? 'bg-purple-50 text-purple-700 border-purple-100'
-                          : 'bg-blue-50 text-blue-700 border-blue-100'
-                      }`}>
-                        {member.plan || 'Basic'}
-                      </span>
+                      <PlanBadge subscription={member.subscription} now={now} />
                     </td>
                     <td className="px-6 py-4">
                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${
@@ -175,12 +205,21 @@ const MembersPage = () => {
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
                         <button
+                          onClick={() => setRecordFor(member)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 text-sm font-medium text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg transition-colors whitespace-nowrap"
+                        >
+                          <Banknote size={16} />
+                          Record payment
+                        </button>
+                        <button
+                          aria-label={`Edit ${member.name}`}
                           onClick={() => handleEdit(member)}
                           className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                         >
                           <Edit size={18} />
                         </button>
                         <button
+                          aria-label={`Delete ${member.name}`}
                           onClick={() => setDeleteModal(member)}
                           className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                         >
@@ -228,18 +267,8 @@ const MembersPage = () => {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
               </div>
+              <p className="text-xs text-gray-500">Plans change only through payments: use “Record payment”.</p>
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="text-sm font-medium text-gray-700 block mb-1">Plan</label>
-                  <select
-                    value={editModal.plan}
-                    onChange={(e) => setEditModal({ ...editModal, plan: e.target.value })}
-                    className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
-                  >
-                    <option value="Basic">Basic</option>
-                    <option value="Premium">Premium</option>
-                  </select>
-                </div>
                 <div>
                   <label className="text-sm font-medium text-gray-700 block mb-1">Status</label>
                   <select
@@ -263,6 +292,14 @@ const MembersPage = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {recordFor && (
+        <RecordPaymentModal
+          member={recordFor}
+          onClose={() => setRecordFor(null)}
+          onRecorded={() => fetchMembers()}
+        />
       )}
 
       {/* Delete Confirmation Modal */}
