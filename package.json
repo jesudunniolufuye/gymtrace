@@ -17,7 +17,8 @@
     "dev:api": "node scripts/dev-api.mjs",
     "smoke": "node scripts/smoke-daily-loop.mjs",
     "seed:demo": "node scripts/seed-demo.mjs",
-    "test:old-rules": "git show 8e4d85d:firestore.rules > .old-firestore.rules && RULES_FILE=.old-firestore.rules firebase emulators:exec --only firestore --project demo-gymtrace \"node --test --test-concurrency=1 tests/rules/*.test.mjs\"; rm -f .old-firestore.rules"
+    "test:old-rules": "git show 8e4d85d:firestore.rules > .old-firestore.rules && RULES_FILE=.old-firestore.rules firebase emulators:exec --only firestore --project demo-gymtrace \"node --test --test-concurrency=1 tests/rules/*.test.mjs\"; rm -f .old-firestore.rules",
+    "demo:old-vs-new": "firebase emulators:exec --only auth,firestore --project demo-gymtrace \"node scripts/demo-old-vs-new.mjs\""
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
