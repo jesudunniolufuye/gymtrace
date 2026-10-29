@@ -83,7 +83,12 @@ service cloud.firestore {
         || (isSelf(userId) && active()
             && changedOnly(['name', 'phone'])
             && validName(request.resource.data.name)
-            && validPhone(request.resource.data.phone));
+            && validPhone(request.resource.data.phone))
+        // FR13: a trainer switches their own availability for new bookings.
+        || (isSelf(userId) && active()
+            && resource.data.role == 'trainer'
+            && changedOnly(['available'])
+            && request.resource.data.available is bool);
 
       allow delete: if isAdmin();
     }
@@ -109,8 +114,9 @@ service cloud.firestore {
     }
 
     // ---------- bookings ----------
-    // Members book active trainers for themselves. Afterwards the only change
-    // a member can make is cancelling; a trainer can complete or cancel.
+    // Members book approved ('active') trainers who are available for
+    // bookings. Afterwards the only change a member can make is cancelling
+    // (FR16); the trainer can complete or cancel.
     match /bookings/{docId} {
       allow read: if isAdmin()
         || (active() && (resource.data.memberId == request.auth.uid
@@ -127,7 +133,8 @@ service cloud.firestore {
         && request.resource.data.memberName is string && request.resource.data.memberName.size() <= 80
         && request.resource.data.trainerName is string && request.resource.data.trainerName.size() <= 80
         && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.role == 'trainer'
-        && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.status == 'active';
+        && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.status == 'active'
+        && get(/databases/$(database)/documents/users/$(request.resource.data.trainerId)).data.get('available', true) == true;
 
       allow update: if isAdmin()
         || (active() && resource.data.status == 'upcoming' && changedOnly(['status']) && (

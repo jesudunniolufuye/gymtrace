@@ -27,3 +27,8 @@ export const updateTrainer = async (uid, fields) => {
   const userRef = doc(db, "users", uid);
   await updateDoc(userRef, fields);
 };
+
+/** FR13: the signed-in trainer opens or closes their own diary for new bookings. */
+export const setMyAvailability = async (uid, available) => {
+  await updateDoc(doc(db, "users", uid), { available });
+};

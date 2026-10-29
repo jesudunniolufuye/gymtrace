@@ -211,3 +211,28 @@ describe('deactivated accounts', () => {
     await assertFails(updateDoc(doc(ctx('goneAdmin'), 'users/mem1'), { name: 'Changed' }));
   });
 });
+
+describe('trainer availability (FR13) and member cancel (FR16)', () => {
+  test('a trainer can switch their own availability, but nothing else', async () => {
+    await assertSucceeds(updateDoc(doc(ctx('tr1'), 'users/tr1'), { available: false }));
+    await assertSucceeds(updateDoc(doc(ctx('tr1'), 'users/tr1'), { available: true }));
+    await assertFails(updateDoc(doc(ctx('tr1'), 'users/tr1'), { available: 'yes' }));
+    await assertFails(updateDoc(doc(ctx('tr1'), 'users/tr1'), { available: true, status: 'active', role: 'admin' }));
+  });
+  test('a trainer cannot change another trainer; a member cannot set availability', async () => {
+    await assertFails(updateDoc(doc(ctx('tr1'), 'users/tr2'), { available: false }));
+    await assertFails(updateDoc(doc(ctx('mem1'), 'users/mem1'), { available: true }));
+  });
+  test('members cannot book a trainer who is unavailable', async () => {
+    await seed((db) => updateDoc(doc(db, 'users/tr1'), { available: false }));
+    await assertFails(addDoc(collection(ctx('mem1'), 'bookings'), booking('mem1', 'tr1')));
+    await seed((db) => updateDoc(doc(db, 'users/tr1'), { available: true }));
+    await assertSucceeds(addDoc(collection(ctx('mem1'), 'bookings'), booking('mem1', 'tr1')));
+  });
+  test("a member cannot cancel someone else's booking or reopen a cancelled one", async () => {
+    await seed((db) => setDoc(doc(db, 'bookings/b9'), { ...booking('mem2', 'tr1'), createdAt: new Date() }));
+    await assertFails(updateDoc(doc(ctx('mem1'), 'bookings/b9'), { status: 'cancelled' }));
+    await seed((db) => setDoc(doc(db, 'bookings/b10'), { ...booking('mem1', 'tr1'), status: 'cancelled', createdAt: new Date() }));
+    await assertFails(updateDoc(doc(ctx('mem1'), 'bookings/b10'), { status: 'upcoming' }));
+  });
+});

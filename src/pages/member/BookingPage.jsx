@@ -1,9 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Calendar, Star, ChevronRight, X, Loader2, Clock } from 'lucide-react';
+import { Search, Calendar, ChevronRight, X, Loader2, Clock, CalendarCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { getAllTrainers } from '../../services/trainerService';
-import { createBooking } from '../../services/bookingService';
+import { createBooking, getBookingsByMember, updateBookingStatus } from '../../services/bookingService';
+import { gymDateString, gymTimeString } from '../../lib/subscription';
+
+const SESSION_TIMES = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
+
+const formatSessionDate = (dateStr) =>
+  new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
 const specialties = ['All', 'Bodybuilding', 'Cardio', 'Yoga', 'CrossFit', 'Rehabilitation', 'Powerlifting', 'Nutrition'];
 
@@ -12,6 +18,11 @@ const BookingPage = () => {
   const [trainers, setTrainers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+  // FR16: the member's own upcoming sessions, with cancel.
+  const [mySessions, setMySessions] = useState([]);
+  const [sessionsVersion, setSessionsVersion] = useState(0);
+  const [confirmCancel, setConfirmCancel] = useState(null); // booking id awaiting confirmation
+  const [cancelling, setCancelling] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [bookingModal, setBookingModal] = useState(null);
   const [bookingDate, setBookingDate] = useState('');
@@ -22,7 +33,8 @@ const BookingPage = () => {
     const load = async () => {
       try {
         const data = await getAllTrainers();
-        setTrainers(data.filter((t) => t.status === 'active'));
+        // Bookable = approved by the gym (status) and open for bookings (FR13).
+        setTrainers(data.filter((t) => t.status === 'active' && t.available !== false));
       } catch (error) { console.error(error);
         toast.error('Failed to load trainers');
       } finally {
@@ -31,6 +43,40 @@ const BookingPage = () => {
     };
     load();
   }, []);
+
+  useEffect(() => {
+    if (!user) return undefined;
+    let cancelled = false;
+    getBookingsByMember(user.uid)
+      .then((rows) => {
+        if (cancelled) return;
+        const today = gymDateString();
+        setMySessions(
+          rows
+            .filter((b) => b.status === 'upcoming' && b.date >= today)
+            .sort((a, b) => `${a.date} ${a.time}`.localeCompare(`${b.date} ${b.time}`))
+        );
+      })
+      .catch((error) => console.error('Failed to load your sessions', error));
+    return () => {
+      cancelled = true;
+    };
+  }, [user, sessionsVersion]);
+
+  const cancelSession = async (booking) => {
+    setCancelling(booking.id);
+    try {
+      await updateBookingStatus(booking.id, 'cancelled');
+      toast.success(`Session with ${booking.trainerName} cancelled`);
+      setConfirmCancel(null);
+      setSessionsVersion((v) => v + 1);
+    } catch (error) {
+      console.error(error);
+      toast.error('Could not cancel the session. Please try again.');
+    } finally {
+      setCancelling(null);
+    }
+  };
 
   const filteredTrainers = trainers.filter((trainer) => {
     const matchesSpecialty = selectedSpecialty === 'All' || (trainer.specialty || '').toLowerCase().includes(selectedSpecialty.toLowerCase());
@@ -42,6 +88,11 @@ const BookingPage = () => {
   const handleBook = async () => {
     if (!bookingDate || !bookingTime) {
       toast.error('Please select a date and time');
+      return;
+    }
+    const today = gymDateString();
+    if (bookingDate < today || (bookingDate === today && bookingTime <= gymTimeString())) {
+      toast.error('Choose a date and time in the future.');
       return;
     }
     setSubmitting(true);
@@ -56,11 +107,16 @@ const BookingPage = () => {
       };
       await createBooking({ ...shared, sessionType: 'Personal Training' });
       toast.success(`Session booked with ${bookingModal.name}!`);
+      setSessionsVersion((v) => v + 1);
       setBookingModal(null);
       setBookingDate('');
       setBookingTime('');
     } catch (error) { console.error(error);
-      toast.error('Failed to book session');
+      toast.error(
+        error?.code === 'permission-denied'
+          ? 'This trainer is not taking bookings right now. Please choose another trainer.'
+          : 'Failed to book session'
+      );
     } finally {
       setSubmitting(false);
     }
@@ -74,6 +130,45 @@ const BookingPage = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-display font-bold text-background-dark mb-2">Book a Trainer</h1>
         <p className="text-gray-600">Find the perfect coach to help you crush your fitness goals.</p>
+      </div>
+
+      {/* FR16: my upcoming sessions */}
+      <div className="bg-white p-6 rounded-xl shadow-sm mb-8">
+        <h2 className="font-display font-bold text-lg text-background-dark mb-4 flex items-center gap-2">
+          <CalendarCheck size={20} className="text-primary" /> My upcoming sessions
+        </h2>
+        {mySessions.length === 0 ? (
+          <p className="text-sm text-gray-500">No upcoming sessions. Book a trainer below.</p>
+        ) : (
+          <ul className="divide-y divide-gray-100">
+            {mySessions.map((b) => (
+              <li key={b.id} className="py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                <div>
+                  <p className="font-semibold text-gray-900">{b.trainerName}</p>
+                  <p className="text-sm text-gray-500">{formatSessionDate(b.date)} · {b.time} · {b.sessionType}</p>
+                </div>
+                {confirmCancel === b.id ? (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => cancelSession(b)}
+                      disabled={cancelling === b.id}
+                      className="px-3 py-1.5 text-sm font-semibold text-white bg-red-600 rounded-lg hover:bg-red-700 disabled:opacity-50"
+                    >
+                      {cancelling === b.id ? 'Cancelling…' : 'Yes, cancel'}
+                    </button>
+                    <button onClick={() => setConfirmCancel(null)} className="px-3 py-1.5 text-sm font-medium text-gray-600 border border-gray-200 rounded-lg hover:bg-gray-50">
+                      Keep
+                    </button>
+                  </div>
+                ) : (
+                  <button onClick={() => setConfirmCancel(b.id)} className="self-start sm:self-auto px-3 py-1.5 text-sm font-medium text-red-600 border border-red-200 rounded-lg hover:bg-red-50">
+                    Cancel session
+                  </button>
+                )}
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
 
       {/* Search and Filter Section */}
@@ -131,11 +226,6 @@ const BookingPage = () => {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2 text-sm text-gray-500 mb-2">
-                  <Star className="text-yellow-400 fill-yellow-400" size={14} />
-                  <span>5.0</span>
-                </div>
-
                 {trainer.phone && (
                   <p className="text-sm text-gray-500 mb-4">{trainer.phone}</p>
                 )}
@@ -172,7 +262,7 @@ const BookingPage = () => {
 
       {/* Booking Modal */}
       {bookingModal && (
-        <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4" onClick={() => setBookingModal(null)}>
+        <div className="fixed inset-0 bg-black/40 z-[60] flex items-center justify-center p-4" onClick={() => setBookingModal(null)}>
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-6 space-y-5" onClick={(e) => e.stopPropagation()}>
             <div className="flex justify-between items-center">
               <h2 className="text-lg font-bold text-gray-900">Book Session</h2>
@@ -199,7 +289,7 @@ const BookingPage = () => {
                 <input
                   type="date"
                   value={bookingDate}
-                  min={new Date().toISOString().slice(0, 10)}
+                  min={gymDateString()}
                   onChange={(e) => setBookingDate(e.target.value)}
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
                 />
@@ -214,7 +304,7 @@ const BookingPage = () => {
                   className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 bg-white"
                 >
                   <option value="">Select time</option>
-                  {['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'].map((t) => (
+                  {SESSION_TIMES.map((t) => (
                     <option key={t} value={t}>{t}</option>
                   ))}
                 </select>

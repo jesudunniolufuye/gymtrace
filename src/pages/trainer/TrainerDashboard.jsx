@@ -1,11 +1,64 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Users, Calendar, Star, Clock, ArrowRight, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { getTrainerClients, getTodayTrainerBookings, getTrainerBookings } from '../../services/bookingService';
+import { setMyAvailability } from '../../services/trainerService';
+
+/**
+ * FR13: the trainer opens or closes their diary for NEW bookings. Existing
+ * bookings are not affected. Separate from the gym's approval (status).
+ */
+const AvailabilityCard = ({ user, userData, refreshUserData }) => {
+  const [saving, setSaving] = useState(false);
+  const available = userData?.available !== false;
+  const approved = userData?.status === 'active';
+
+  const toggle = async () => {
+    setSaving(true);
+    try {
+      await setMyAvailability(user.uid, !available);
+      await refreshUserData();
+      toast.success(!available ? 'You are open for new bookings' : 'You are hidden from new bookings');
+    } catch (error) {
+      console.error(error);
+      toast.error('Could not update your availability');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div>
+        <p className="font-semibold text-gray-900">
+          {available ? 'Available for new bookings' : 'Not taking new bookings'}
+        </p>
+        <p className="text-sm text-gray-500">
+          {!approved
+            ? 'Your trainer profile is waiting for approval by the gym. Members can book you once it is approved.'
+            : available
+              ? 'Members can book sessions with you. Existing bookings are not affected if you switch this off.'
+              : 'Members cannot book you. Your existing sessions still stand.'}
+        </p>
+      </div>
+      <button
+        role="switch"
+        aria-checked={available}
+        aria-label="Available for new bookings"
+        onClick={toggle}
+        disabled={saving}
+        className={`shrink-0 w-14 h-8 rounded-full p-1 transition-colors disabled:opacity-50 ${available ? 'bg-emerald-500' : 'bg-gray-300'}`}
+      >
+        <span className={`block w-6 h-6 bg-white rounded-full shadow transition-transform ${available ? 'translate-x-6' : 'translate-x-0'}`} />
+      </button>
+    </div>
+  );
+};
 
 const TrainerDashboard = () => {
-    const { user, userData } = useAuth();
+    const { user, userData, refreshUserData } = useAuth();
     const navigate = useNavigate();
     const firstName = userData?.name?.split(' ')[0] || 'Trainer';
 
@@ -58,6 +111,8 @@ const TrainerDashboard = () => {
                     {new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })}
                 </div>
             </div>
+
+            <AvailabilityCard user={user} userData={userData} refreshUserData={refreshUserData} />
 
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">

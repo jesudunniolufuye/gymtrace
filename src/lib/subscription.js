@@ -1,5 +1,5 @@
 // Browser-side helpers around the shared plan rules (shared/subscription.js).
-import { PLANS, getSubscriptionStatus } from "../../shared/subscription.js";
+import { GYM_UTC_OFFSET_MS, PLANS, getSubscriptionStatus } from "../../shared/subscription.js";
 
 export { PLANS, getSubscriptionStatus, startOfGymDay, startOfGymMonth, toMillis } from "../../shared/subscription.js";
 
@@ -19,6 +19,12 @@ export const formatDate = (ms, withTime = false) =>
 
 export const formatTime = (ms) =>
   ms == null ? "—" : new Date(ms).toLocaleTimeString("en-GB", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit" });
+
+/** Today's date at the gym (Lagos), as "YYYY-MM-DD". */
+export const gymDateString = (ms = Date.now()) => new Date(ms + GYM_UTC_OFFSET_MS).toISOString().slice(0, 10);
+
+/** Current time at the gym (Lagos), as "HH:MM". */
+export const gymTimeString = (ms = Date.now()) => new Date(ms + GYM_UTC_OFFSET_MS).toISOString().slice(11, 16);
 
 /** How a payment was made, e.g. "Visa •••• 4081", "Cash", "Bank transfer". */
 export const paymentMethodLabel = (p) => {
