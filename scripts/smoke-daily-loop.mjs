@@ -6,32 +6,52 @@
 //   → member sees payment + receipt → admin payments list → member QR
 //   → admin check-in → replay refused → repeat scan not charged
 //
-// Needs: npm run emulators, npm run dev:api, and a seeded admin:
-//   SMOKE_ADMIN_EMAIL=... SMOKE_ADMIN_PASSWORD=... node scripts/smoke-daily-loop.mjs
-// Emulator only: refuses to run against anything else.
+// Emulator (default). Needs npm run emulators, npm run dev:api, a seeded admin:
+//   SMOKE_ADMIN_EMAIL=... SMOKE_ADMIN_PASSWORD=... npm run smoke
+//
+// Staging (SMOKE_TARGET=staging). Creates a throwaway smoke-*@example.test
+// member in the staging project; the admin session uses a one-time custom
+// token for the seeded admin (no password needed). Never runs against prod:
+//   SMOKE_TARGET=staging SMOKE_PROJECT=gymtrace-staging \
+//   GOOGLE_APPLICATION_CREDENTIALS=~/secrets/gymtrace-staging-sa.json \
+//   SMOKE_API_URL=https://<staging host> SMOKE_WEB_API_KEY=<public web api key> \
+//   SMOKE_ADMIN_EMAIL=<seeded admin> npm run smoke
 import { randomUUID } from 'node:crypto';
 import { deleteApp, initializeApp } from 'firebase/app';
 import {
-  connectAuthEmulator, createUserWithEmailAndPassword, getAuth, sendEmailVerification, signInWithEmailAndPassword,
+  applyActionCode, connectAuthEmulator, createUserWithEmailAndPassword, getAuth, sendEmailVerification,
+  signInWithCustomToken, signInWithEmailAndPassword,
 } from 'firebase/auth';
 import {
   Timestamp, collection, connectFirestoreEmulator, doc, getDoc, getDocs, getFirestore, orderBy, query,
   serverTimestamp, setDoc, where,
 } from 'firebase/firestore';
 
-const PROJECT = 'demo-gymtrace';
+const STAGING = process.env.SMOKE_TARGET === 'staging';
+const PROJECT = STAGING ? process.env.SMOKE_PROJECT : 'demo-gymtrace';
 const AUTH_HOST = '127.0.0.1:9099';
 const API = process.env.SMOKE_API_URL || 'http://127.0.0.1:3001';
 const adminEmail = process.env.SMOKE_ADMIN_EMAIL;
 const adminPassword = process.env.SMOKE_ADMIN_PASSWORD;
-if (!adminEmail || !adminPassword) {
-  console.error('Set SMOKE_ADMIN_EMAIL and SMOKE_ADMIN_PASSWORD (a seeded emulator admin).');
+const fail = (msg) => {
+  console.error(msg);
   process.exit(2);
+};
+
+let admin$ = null; // firebase-admin, staging only
+if (STAGING) {
+  if (!PROJECT || /prod/i.test(PROJECT)) fail('SMOKE_PROJECT must be a staging project (never production).');
+  if (!/^https:\/\//.test(API)) fail('SMOKE_API_URL must be the https staging URL.');
+  if (!process.env.SMOKE_WEB_API_KEY || !adminEmail) fail('Set SMOKE_WEB_API_KEY and SMOKE_ADMIN_EMAIL.');
+  admin$ = await import('../api/_lib/firebaseAdmin.js');
+  if (admin$.usingEmulator || admin$.adminProjectId !== PROJECT) {
+    fail(`Credentials are for "${admin$.adminProjectId}", not SMOKE_PROJECT "${PROJECT}".`);
+  }
+} else {
+  if (!adminEmail || !adminPassword) fail('Set SMOKE_ADMIN_EMAIL and SMOKE_ADMIN_PASSWORD (a seeded emulator admin).');
+  if (!/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(API)) fail('SMOKE_API_URL must be a local address in emulator mode.');
 }
-if (!/^http:\/\/(127\.0\.0\.1|localhost)(:\d+)?$/.test(API)) {
-  console.error('SMOKE_API_URL must be a local address. This script is for the emulator only.');
-  process.exit(2);
-}
+console.log(`Smoke test against ${STAGING ? `${PROJECT} via ${API}` : 'the local emulator'}\n`);
 
 let failures = 0;
 const check = (label, ok, detail = '') => {
@@ -40,12 +60,38 @@ const check = (label, ok, detail = '') => {
 };
 
 function client(name) {
-  const app = initializeApp({ apiKey: 'demo-key', projectId: PROJECT, authDomain: 'localhost' }, name);
+  const config = STAGING
+    ? { apiKey: process.env.SMOKE_WEB_API_KEY, projectId: PROJECT, authDomain: `${PROJECT}.firebaseapp.com` }
+    : { apiKey: 'demo-key', projectId: PROJECT, authDomain: 'localhost' };
+  const app = initializeApp(config, name);
   const auth = getAuth(app);
-  connectAuthEmulator(auth, `http://${AUTH_HOST}`, { disableWarnings: true });
   const db = getFirestore(app);
-  connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  if (!STAGING) {
+    connectAuthEmulator(auth, `http://${AUTH_HOST}`, { disableWarnings: true });
+    connectFirestoreEmulator(db, '127.0.0.1', 8080);
+  }
   return { app, auth, db };
+}
+
+/** Marks the new member's email verified using the real one-time link code. */
+async function verifyEmail(auth, user) {
+  let oobCode;
+  if (STAGING) {
+    const link = await admin$.adminAuth.generateEmailVerificationLink(user.email);
+    oobCode = new URL(link).searchParams.get('oobCode');
+  } else {
+    await sendEmailVerification(user);
+    const codes = await (await fetch(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT}/oobCodes`)).json();
+    const link = codes.oobCodes.filter((c) => c.email === user.email && c.requestType === 'VERIFY_EMAIL').pop()?.oobLink;
+    oobCode = new URL(link).searchParams.get('oobCode');
+  }
+  await applyActionCode(auth, oobCode);
+}
+
+async function signInAdmin(auth) {
+  if (!STAGING) return signInWithEmailAndPassword(auth, adminEmail, adminPassword);
+  const { uid } = await admin$.adminAuth.getUserByEmail(adminEmail);
+  return signInWithCustomToken(auth, await admin$.adminAuth.createCustomToken(uid));
 }
 
 async function api(auth, method, path, body) {
@@ -66,24 +112,24 @@ try {
   await setDoc(doc(member.db, 'users', cred.user.uid), {
     name: 'Smoke Member', email: cred.user.email, role: 'member', phone: '', status: 'active', createdAt: serverTimestamp(),
   });
-  await sendEmailVerification(cred.user);
-  const codes = await (await fetch(`http://${AUTH_HOST}/emulator/v1/projects/${PROJECT}/oobCodes`)).json();
-  const link = codes.oobCodes.filter((c) => c.email === email && c.requestType === 'VERIFY_EMAIL').pop()?.oobLink;
-  await fetch(link);
+  await verifyEmail(member.auth, cred.user);
   await signInWithEmailAndPassword(member.auth, email, password); // fresh token with email_verified
   check('member registers and verifies email', member.auth.currentUser.emailVerified === true);
   const memberId = cred.user.uid;
 
-  // 2. Production mode: no online card payments, no QR without a plan.
+  // 2. Card simulator: on for staging/demo; when off, online payment is refused.
   const options = await (await fetch(`${API}/api/payment-options`)).json();
-  check('card simulator is off', options.cardSimulator === false);
-  const pay = await api(member.auth, 'POST', 'pay', { plan: 'monthly', idempotencyKey: randomUUID(), card: {} });
-  check('online card payment refused', pay.status === 403 && pay.body.code === 'simulator-disabled', `HTTP ${pay.status}`);
+  const simulatorExpected = STAGING ? true : options.cardSimulator;
+  check(`card simulator is ${options.cardSimulator ? 'on' : 'off'}`, options.cardSimulator === simulatorExpected);
+  if (!options.cardSimulator) {
+    const pay = await api(member.auth, 'POST', 'pay', { plan: 'monthly', idempotencyKey: randomUUID(), card: {} });
+    check('online card payment refused', pay.status === 403 && pay.body.code === 'simulator-disabled', `HTTP ${pay.status}`);
+  }
   const noQr = await api(member.auth, 'POST', 'qr-token');
   check('no QR code without a plan', noQr.status === 403 && noQr.body.code === 'no-active-plan', `HTTP ${noQr.status}`);
 
   // 3. Admin records a cash payment at the front desk.
-  await signInWithEmailAndPassword(admin.auth, adminEmail, adminPassword);
+  await signInAdmin(admin.auth);
   const base = { memberId, plan: 'monthly', method: 'cash', amount: 25000 };
   const noRef = await api(admin.auth, 'POST', 'admin/record-payment', { ...base, method: 'transfer', idempotencyKey: randomUUID() });
   check('transfer without reference refused', noRef.status === 400 && noRef.body.field === 'externalReference');
@@ -124,6 +170,7 @@ try {
   console.error('FAIL  unexpected error:', error.message);
 } finally {
   await Promise.all([deleteApp(member.app), deleteApp(admin.app)]);
+  if (STAGING) console.log(`\nTest member left in ${PROJECT}: ${email}`);
 }
 
 console.log(failures ? `\n${failures} check(s) failed` : '\nAll checks passed');
