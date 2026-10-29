@@ -10,9 +10,15 @@ import {
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { getAdminStats, getRecentActivity, getMonthlyGrowth, getWeeklyCheckIns } from '../../services/adminService';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+
+// Name given to admins created by scripts/seed.mjs.
+const DEFAULT_ADMIN_NAME = 'Gym Administrator';
 
 const AdminDashboard = () => {
-  const [stats, setStats] = useState({ totalMembers: 0, totalTrainers: 0, todayCheckIns: 0, totalBookings: 0 });
+  const { userData } = useAuth();
+  const [stats, setStats] = useState({ totalMembers: 0, activeMembers: 0, totalTrainers: 0, activeTrainers: 0, todayCheckIns: 0, totalBookings: 0 });
   const [recentActivity, setRecentActivity] = useState([]);
   const [growthData, setGrowthData] = useState([]);
   const [weeklyData, setWeeklyData] = useState([]);
@@ -51,15 +57,15 @@ const AdminDashboard = () => {
     },
     {
       title: 'Active Members',
-      value: stats.totalMembers.toString(),
-      change: 'All time',
+      value: stats.activeMembers.toString(),
+      change: `with an active plan · ${stats.totalMembers} registered`,
       icon: Users,
       color: 'bg-blue-500',
     },
     {
       title: 'Active Trainers',
-      value: stats.totalTrainers.toString(),
-      change: 'All time',
+      value: stats.activeTrainers.toString(),
+      change: `bookable · ${stats.totalTrainers} registered`,
       icon: Dumbbell,
       color: 'bg-orange-500',
     },
@@ -84,6 +90,12 @@ const AdminDashboard = () => {
 
   return (
     <div className="space-y-6">
+      {userData?.name === DEFAULT_ADMIN_NAME && (
+        <div role="status" className="rounded-xl border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+          Receipts and check-ins record who did them. Please{' '}
+          <Link to="/admin/settings" className="font-semibold underline">set your own name in Settings</Link>.
+        </div>
+      )}
       <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
         <h1 className="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
         <div className="text-sm text-slate-500">

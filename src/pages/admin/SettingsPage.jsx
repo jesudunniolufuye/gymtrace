@@ -1,19 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { Save, Building, Mail, Phone, Lock, CreditCard, AlertTriangle, Loader2 } from 'lucide-react';
+import { Save, Building, Mail, Phone, CreditCard, Loader2, UserCircle } from 'lucide-react';
 import { toast } from 'sonner';
 import { getSettings, saveSettings } from '../../services/settingsService';
+import { updateUserDoc } from '../../services/userService';
+import { useAuth } from '../../context/AuthContext';
+import { PLANS, formatNaira } from '../../lib/subscription';
 
 const SettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const { user, userData, refreshUserData } = useAuth();
+  const [myName, setMyName] = useState(userData?.name ?? '');
+  const [savingName, setSavingName] = useState(false);
 
   const [formData, setFormData] = useState({
     gymName: '',
     email: '',
     phone: '',
-    basicPrice: 0,
-    premiumPrice: 0,
   });
 
   useEffect(() => {
@@ -25,10 +28,7 @@ const SettingsPage = () => {
             gymName: data.gymName || '',
             email: data.email || '',
             phone: data.phone || '',
-            basicPrice: data.basicPrice ?? 0,
-            premiumPrice: data.premiumPrice ?? 0,
           });
-          setMaintenanceMode(data.maintenanceMode || false);
         }
       } catch (error) { console.error(error);
         toast.error('Failed to load settings');
@@ -48,12 +48,7 @@ const SettingsPage = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      await saveSettings({
-        ...formData,
-        basicPrice: Number(formData.basicPrice),
-        premiumPrice: Number(formData.premiumPrice),
-        maintenanceMode,
-      });
+      await saveSettings(formData);
       toast.success('Settings saved successfully!');
     } catch (error) { console.error(error);
       toast.error('Failed to save settings');
@@ -62,15 +57,24 @@ const SettingsPage = () => {
     }
   };
 
-  const toggleMaintenance = async () => {
-    const next = !maintenanceMode;
-    setMaintenanceMode(next);
+  // The signed-in admin's own name: shown as "Recorded by" on receipts and
+  // check-ins they make from now on (earlier records keep the old name).
+  const saveMyName = async () => {
+    const name = myName.trim();
+    if (name.length < 2 || name.length > 80) {
+      toast.error('Enter your name (2 to 80 characters).');
+      return;
+    }
+    setSavingName(true);
     try {
-      await saveSettings({ maintenanceMode: next });
-      toast.info(`Maintenance mode ${next ? 'enabled' : 'disabled'}`);
-    } catch (error) { console.error(error);
-      setMaintenanceMode(!next);
-      toast.error('Failed to update maintenance mode');
+      await updateUserDoc(user.uid, { name });
+      await refreshUserData();
+      toast.success('Your name is saved');
+    } catch (error) {
+      console.error(error);
+      toast.error('Failed to save your name');
+    } finally {
+      setSavingName(false);
     }
   };
 
@@ -79,7 +83,7 @@ const SettingsPage = () => {
       <div className="flex justify-between items-center">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Global Settings</h1>
-          <p className="text-gray-500">Configure application preferences</p>
+          <p className="text-gray-500">Your name, gym contact details and prices</p>
         </div>
         <button 
           onClick={handleSave}
@@ -93,6 +97,36 @@ const SettingsPage = () => {
           )}
           <span>Save Changes</span>
         </button>
+      </div>
+
+      {/* Your profile: the signed-in admin's own name */}
+      <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
+        <div className="flex items-center gap-2 mb-4 text-gray-900 font-semibold border-b border-gray-100 pb-2">
+          <UserCircle size={20} className="text-blue-500" />
+          Your name
+        </div>
+        <p className="text-sm text-gray-500 mb-3">
+          Shown as “Recorded by” on receipts and check-ins you make from now on. Use your real name.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <input
+            type="text"
+            aria-label="Your name"
+            value={myName}
+            onChange={(e) => setMyName(e.target.value)}
+            maxLength={80}
+            className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+          />
+          <button
+            type="button"
+            onClick={saveMyName}
+            disabled={savingName || myName.trim() === (userData?.name ?? '')}
+            className="px-5 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
+          >
+            {savingName && <Loader2 size={16} className="animate-spin" />}
+            Save name
+          </button>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -143,68 +177,24 @@ const SettingsPage = () => {
           </div>
         </div>
 
-        {/* Membership Prices */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-6 text-gray-900 font-semibold border-b border-gray-100 pb-2">
+        {/* Membership Prices (read-only: set in code, used by the server) */}
+        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm md:col-span-2">
+          <div className="flex items-center gap-2 mb-4 text-gray-900 font-semibold border-b border-gray-100 pb-2">
             <CreditCard size={20} className="text-green-500" />
-            Membership Pricing
+            Membership Prices
           </div>
-          <div className="space-y-4">
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Basic Plan ($/month)</label>
-              <input
-                type="number"
-                step="0.01"
-                name="basicPrice"
-                value={formData.basicPrice}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-              />
-            </div>
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Premium Plan ($/month)</label>
-              <input
-                type="number"
-                step="0.01"
-                name="premiumPrice"
-                value={formData.premiumPrice}
-                onChange={handleChange}
-                className="w-full px-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* System & Maintenance */}
-        <div className="bg-white p-6 rounded-xl border border-gray-100 shadow-sm">
-          <div className="flex items-center gap-2 mb-6 text-gray-900 font-semibold border-b border-gray-100 pb-2">
-            <Lock size={20} className="text-orange-500" />
-            System Control
-          </div>
-          
-          <div className="space-y-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="font-medium text-gray-900">Maintenance Mode</div>
-                <div className="text-xs text-gray-500">Disable access for all users</div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {Object.values(PLANS).map((plan) => (
+              <div key={plan.id} className="rounded-lg bg-gray-50 border border-gray-100 p-4">
+                <p className="text-sm text-gray-500">{plan.label}</p>
+                <p className="text-xl font-bold text-gray-900">{formatNaira(plan.amount)}</p>
+                <p className="text-xs text-gray-500 mt-1">{plan.summary}</p>
               </div>
-              <button 
-                type="button"
-                onClick={toggleMaintenance}
-                className={`p-1 rounded-full w-12 transition-colors ${maintenanceMode ? 'bg-blue-600' : 'bg-gray-200'}`}
-              >
-                <div className={`w-5 h-5 bg-white rounded-full shadow-sm transform transition-transform ${maintenanceMode ? 'translate-x-6' : 'translate-x-0'}`} />
-              </button>
-            </div>
-
-            <div className="bg-orange-50 p-4 rounded-lg border border-orange-100 flex gap-3">
-              <AlertTriangle className="text-orange-600 flex-shrink-0" size={20} />
-              <div className="text-sm text-orange-800">
-                <span className="font-semibold block mb-1">Warning Zone</span>
-                Make sure to backup the database before enabling maintenance mode.
-              </div>
-            </div>
+            ))}
           </div>
+          <p className="text-xs text-gray-500 mt-3">
+            Prices are fixed by the system and used for every payment. Ask the developer to change them.
+          </p>
         </div>
 
       </form>

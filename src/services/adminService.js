@@ -8,6 +8,7 @@ import {
   Timestamp,
 } from "firebase/firestore";
 import { db } from "../lib/firebase";
+import { getSubscriptionStatus } from "../../shared/subscription.js";
 
 const usersRef = collection(db, "users");
 const attendanceRef = collection(db, "attendance");
@@ -24,9 +25,20 @@ export const getAdminStats = async () => {
     getDocs(bookingsRef),
   ]);
 
+  const now = Date.now();
+  // Active member = not deactivated and has a plan that is valid right now.
+  const activeMembers = membersSnap.docs.filter((d) => {
+    const m = d.data();
+    return m.status !== "disabled" && getSubscriptionStatus(m.subscription, now).active;
+  }).length;
+  // Active trainer = approved and bookable.
+  const activeTrainers = trainersSnap.docs.filter((d) => d.data().status === "active").length;
+
   return {
     totalMembers: membersSnap.size,
+    activeMembers,
     totalTrainers: trainersSnap.size,
+    activeTrainers,
     todayCheckIns,
     totalBookings: bookingsSnap.size,
   };
