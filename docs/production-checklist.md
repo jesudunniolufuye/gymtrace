@@ -1,9 +1,9 @@
 # GymTrace production checklist
 
 What has to be true to run GymTrace for real members, who owns what, and what's left after launch.
-Written 29 Oct 2026, for the soft launch on Fri 30 Oct.
+Written 29 Oct 2026. GymTrace is a showcase project and is not being launched; this is what running it for real would require.
 
-Tick items as they're done. **Bold items block opening to all members**; a soft launch with staff and a small pilot group can start before they're all done.
+Tick items as they're done. **Bold items would block opening to real members.**
 
 ---
 
@@ -85,7 +85,7 @@ Payment records are the gym's financial records. Never delete them to "clean up"
 ## 5. Vercel plan and hosting
 
 - [ ] **Production on Vercel Pro.** Vercel's Fair Use Guidelines limit Hobby to non-commercial personal use and list "requesting or processing payment from visitors" as commercial. The staging/demo deployment can stay on Hobby. The alternative, later, is moving to Firebase Hosting plus Cloud Functions on Blaze, which would mean porting the `api/` folder (about a day).
-- [ ] **Deployment Protection**: production must be public. Staging is currently public too. Turn protection back on for staging after the defence if you don't want outsiders on it.
+- [ ] **Deployment Protection**: production must be public. Staging is currently public too. Turn protection back on for staging when you're not demoing it, if you don't want outsiders on it.
 - [ ] **Function region**: Vercel runs the API in `iad1` (Washington DC). Check the Firestore location in Firebase console → Firestore → (default) database. If Firestore is in Europe, set the same region in `vercel.json` (`"regions": ["lhr1"]` or similar) for faster check-ins. Put the actual location in the privacy notice.
 - [ ] Optional: a proper domain (e.g. `gym.babcock.edu.ng`). Add it in Vercel and in Firebase Authentication → Settings → Authorized domains.
 
@@ -133,7 +133,7 @@ Rough effort: 1–2 days including tests.
 
 ## 9. Post-launch work list
 
-Not done before the deadline; none of these block a soft launch.
+Not done before the deadline; none of these block a demo.
 
 - [ ] **Void/correct a recorded payment** (today a mistake can't be undone in the app: staff note the receipt number and tell the manager; fixing it needs the developer). Should be a manager-only "void" that keeps the record and reverses the plan time.
 - [ ] Workout form: highlight missing fields in red (TC3 step 3; currently only the title is checked).
@@ -148,7 +148,7 @@ Not done before the deadline; none of these block a soft launch.
 - [ ] Weekly-goal bar and new charts (cut from the thesis scope; reword TC3 step 2).
 - [ ] Thesis updates: 1.4, 3.4, 3.8, 3.10, 3.11, 4.2 and 4.3 (listed in `docs/assessment.md`), plus FR20–FR23 for recorded payments, receipts, deactivation and password reset.
 
-## Known limitations (say these at the defence)
+## Known limitations (state these when presenting the project)
 
 - A QR code shared within its 60 seconds could be used once by someone else. Staff compare the name shown with the person (and the ID card for manual check-in). Thesis 1.5 acknowledges this.
 - Recorded cash/transfer payments rely on staff honesty; each is attributed to the staff account that recorded it.

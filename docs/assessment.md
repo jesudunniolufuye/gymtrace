@@ -1,5 +1,10 @@
 # GymTrace: Continue-or-Rebuild Assessment (28 Oct 2026)
 
+> **Dated record.** Written 28–29 Oct 2026, when the plan was to put GymTrace into real use. Since then:
+> - GymTrace is a **showcase project** (taking over a broken codebase and finishing it), not a live service.
+> - Staging is **`gymtrace-staging`** and production is **`gymtrace-prod`**.
+> - The plans and schedules below are kept as written. For what was actually built, see `docs/PROJECT-REPORT.md`.
+
 ## Recommendation (TL;DR)
 
 **Option B (Hybrid). Keep the stack: React + Vite + Tailwind, Firebase Auth + Firestore, hosted on Vercel. Add a small server layer of Vercel serverless functions (`/api`, Node, `firebase-admin`) for the three things a browser must not be trusted with: payments, QR token signing, and check-in verification. Lock down the Firestore rules. Keep ~80% of the UI.**
@@ -12,7 +17,7 @@ Why:
   - anyone can forge a QR code
   - the scanner never checks payment status
 
-  "Continue (A)" would leave FR6, FR10 and FR12 insecure, which is indefensible at a defence. These parts need rewriting, not patching.
+  "Continue (A)" would leave FR6, FR10 and FR12 insecure, which isn't acceptable for a system that takes payments. These parts need rewriting, not patching.
 - **A rebuild (C) does not fit 2.5 days.** Laravel/Django + MySQL would mean three role UIs, auth, email verification, QR scanning, charts, and free MySQL hosting from zero, plus rewriting thesis chapters 3–4 and every screenshot.
 - **Vercel functions are free on Hobby.** Firebase Cloud Functions would need the paid Blaze plan.
 - **It's easy to defend.** You get a real "backend business logic" tier (NFR13), and HMAC-signed QR tokens are simple to explain.
@@ -175,7 +180,7 @@ Notes:
 ## Option comparison (effort vs deadline)
 | Option | Effort | Outcome by Fri 30 Oct |
 |---|---|---|
-| A Continue | ~1.5 days | Bugs fixed, but payment/QR/check-in stay client-trusted. FR6/10/12 unsafe, and an examiner can break it in devtools. |
+| A Continue | ~1.5 days | Bugs fixed, but payment/QR/check-in stay client-trusted. FR6/10/12 unsafe, and anyone can break it in devtools. |
 | **B Hybrid** | **~2–2.5 days** | Secure core (rules + 3–4 API functions). All FRs met or deliberately scoped. Thesis changes are modest. |
 | C Rebuild (e.g. Laravel/MySQL) | 4–6 days | Doesn't fit. Free MySQL hosting is also a hurdle. Every screenshot and chapters 3–4 would change. |
 
@@ -221,7 +226,7 @@ Notes:
 
 **Code freeze: Friday 11:00.** Friday morning is only for the full test run on staging and production, and fixing what it finds. No new features on Friday. The design notes in the next section ("Revised plan for production use") still apply; this section replaces its schedule and cut list.
 
-Environments: **staging** = the demo project (`gymtrace-demo`, card simulator ON); **production** = `gymtrace-prod` (simulator OFF).
+Environments: **staging** = `gymtrace-staging` (card simulator ON); **production** = `gymtrace-prod` (simulator OFF).
 
 ### Status, Thu 29 Oct, 15:05
 - **All must-haves done, tested on staging, and live in production:** daily loop, deactivation, forgot password, privacy notice (placeholders), simulator switch.
@@ -320,15 +325,15 @@ GymTrace will now be used by real members, not only demoed. This section replace
 ### Two environments (recommended)
 | | Production | Demo / preview |
 |---|---|---|
-| Firebase project | `gymtrace-prod` (real members) | `gymtrace-demo` (test data only) |
+| Firebase project | `gymtrace-prod` (real members) | `gymtrace-staging` (test data only) |
 | Vercel environment | Production (your production branch) | Preview (every other branch) |
 | Card simulator | **OFF** | ON |
-| Used for | the gym | your defence, examiners, testing |
+| Used for | the gym | demos and testing |
 
 Why two:
 - Fake card payments never reach real financial records.
 - Real people's data never appears in a demo.
-- FR6 (simulated gateway) can still be shown at the defence, on the demo environment.
+- FR6 (simulated gateway) can still be shown in demos, on staging.
 
 ### Design of the new items
 1. **Card-simulator switch.**
@@ -385,7 +390,7 @@ Why two:
 **Thu 29 Oct**
 | # | Work | Who | Est. | Covers |
 |---|---|---|---|---|
-| 0 | Create `gymtrace-prod` and `gymtrace-demo` Firebase projects and the Vercel project; set env vars (`PAYMENTS_SIMULATOR=enabled` for **Preview only**). Approve the rules/index deploy and admin seed for each real project. | You (+ me with your OK) | 1 h | setup |
+| 0 | Create `gymtrace-prod` and `gymtrace-staging` Firebase projects and the Vercel project; set env vars (`PAYMENTS_SIMULATOR=enabled` for **Preview only**). Approve the rules/index deploy and admin seed for each real project. | You (+ me with your OK) | 1 h | setup |
 | 2b-1 | Simulator switch + "pay at the front desk" page state. Push → **first deploys (preview and production) by midday** | Me | 45 min | FR6, safety |
 | 3 | QR check-in as planned, plus: deactivated accounts refused, day pass used up on entry, revoked sessions rejected | Me | 4 h | FR8–12, TC2 |
 | 2b-2 | Record payment + receipts + admin Payments page | Me | 3 h | FR7, FR17 (payment summaries), new TC5b |
@@ -431,11 +436,11 @@ Friday totals about 9 hours, so it's a long day. The cut order below is what kee
 - FR18 status fix
 
 ### What code can't fix by Saturday
-Saturday is realistic as a **soft launch**: staff plus a small pilot group. Before opening to everyone, these items need doing. They're not code, and some need the university:
+If GymTrace were put into real use, these items would need doing first. They're not code, and some need the university:
 - **Vercel plan.**
   - The free Hobby plan is for non-commercial personal use only, and Vercel lists "requesting or processing payment from visitors" as commercial use.
   - The production deployment of a gym taking fees should be on **Vercel Pro**, or later move hosting to Firebase, which would mean reworking `/api`.
-  - The demo deployment for the defence can stay on Hobby.
+  - The staging/demo deployment can stay on Hobby.
 - **Backups.**
   - Firestore scheduled backups require the **Blaze** (pay-as-you-go) plan. Blaze keeps the free quota; set a budget alert.
   - Without it, there are no automated backups of payment records.
