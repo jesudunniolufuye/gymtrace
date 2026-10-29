@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -118,6 +118,11 @@ const AdminLoginPage = () => {
               {errors.password && (
                 <p className="text-red-400 text-xs mt-1 font-medium">{errors.password.message}</p>
               )}
+              <div className="text-right mt-2">
+                <Link to="/forgot-password" className="text-sm text-emerald-400 font-semibold hover:underline">
+                  Forgot password?
+                </Link>
+              </div>
             </div>
             
             {/* SUBMIT BUTTON */}

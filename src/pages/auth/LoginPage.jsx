@@ -38,6 +38,7 @@ const LoginPage = () => {
   // Shown after registering (set by RegisterPage) or after clicking the email link.
   const registeredEmail = location.state?.registeredEmail;
   const justVerified = searchParams.get('verified') === '1';
+  const justReset = searchParams.get('reset') === '1';
 
   // Holds the credentials of an unverified login so we can resend the email.
   const [unverified, setUnverified] = useState(null);
@@ -104,6 +105,13 @@ const LoginPage = () => {
           <div role="status" className="mb-6 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
             <MailCheck className="w-5 h-5 shrink-0" />
             <p>Your email has been verified. You can now log in.</p>
+          </div>
+        )}
+
+        {justReset && (
+          <div role="status" className="mb-6 flex gap-3 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-800">
+            <MailCheck className="w-5 h-5 shrink-0" />
+            <p>Your password has been changed. Log in with your new password.</p>
           </div>
         )}
 

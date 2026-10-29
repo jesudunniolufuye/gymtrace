@@ -17,7 +17,22 @@ export const loginUser = (email, password) =>
 
 export const logoutUser = () => signOut(auth);
 
-export const resetPassword = (email) => sendPasswordResetEmail(auth, email);
+/**
+ * Sends Firebase's password-reset email; the link returns to
+ * /login?reset=1 (falls back to Firebase's own page if this domain isn't an
+ * authorized domain).
+ */
+export const resetPassword = async (email) => {
+  try {
+    await sendPasswordResetEmail(auth, email, { url: `${window.location.origin}/login?reset=1` });
+  } catch (error) {
+    if (error.code === "auth/unauthorized-continue-uri" || error.code === "auth/invalid-continue-uri") {
+      await sendPasswordResetEmail(auth, email);
+    } else {
+      throw error;
+    }
+  }
+};
 
 export const onAuthChange = (callback) => onAuthStateChanged(auth, callback);
 

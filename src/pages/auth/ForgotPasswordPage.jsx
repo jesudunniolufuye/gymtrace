@@ -1,11 +1,12 @@
-import React from 'react';
-import { Mail, ArrowRight, ArrowLeft } from 'lucide-react';
+import React, { useState } from 'react';
+import { Mail, ArrowRight, ArrowLeft, MailCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from 'sonner';
 import { resetPassword } from '../../services/authService';
+import { authErrorMessage } from '../../lib/authErrors';
 import logo from '../../assets/logo.png';
 
 const forgotPasswordSchema = z.object({
@@ -13,6 +14,8 @@ const forgotPasswordSchema = z.object({
 });
 
 const ForgotPasswordPage = () => {
+  // Email we just sent to; switches the card to the confirmation view.
+  const [sentTo, setSentTo] = useState(null);
 
   const {
     register,
@@ -26,12 +29,19 @@ const ForgotPasswordPage = () => {
   });
 
   const onSubmit = async (data) => {
+    const email = data.email.trim();
     try {
-      await resetPassword(data.email);
-      toast.success('Password reset link sent! Check your email.');
+      await resetPassword(email);
+      setSentTo(email);
     } catch (error) {
+      // Same answer whether or not the account exists, so this page can't be
+      // used to find out who is registered.
+      if (error.code === 'auth/user-not-found') {
+        setSentTo(email);
+        return;
+      }
       console.error(error);
-      toast.error('Failed to send reset link. Please try again.');
+      toast.error(authErrorMessage(error, 'Could not send the reset email. Please try again.'));
     }
   };
 
@@ -52,6 +62,23 @@ const ForgotPasswordPage = () => {
           </p>
         </div>
 
+        {sentTo ? (
+          <div role="status" className="rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-sm text-emerald-900">
+            <div className="flex gap-3">
+              <MailCheck className="w-5 h-5 shrink-0" />
+              <div>
+                <p className="font-semibold mb-1">Check your email</p>
+                <p>
+                  If an account exists for <strong>{sentTo}</strong>, we've sent a link to set a new password.
+                  Check your inbox and spam folder. The link expires in 1 hour.
+                </p>
+                <button type="button" onClick={() => setSentTo(null)} className="mt-3 font-semibold text-emerald-800 underline">
+                  Use a different email
+                </button>
+              </div>
+            </div>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Email Input */}
           <div>
@@ -88,6 +115,7 @@ const ForgotPasswordPage = () => {
             )}
           </button>
         </form>
+        )}
 
         <div className="mt-8 text-center bg-slate-50 py-3 rounded-xl border border-slate-100">
           <Link to="/login" className="flex items-center justify-center space-x-2 text-slate-600 font-bold hover:text-emerald-600 transition-colors">
