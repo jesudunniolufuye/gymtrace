@@ -34,3 +34,4 @@ firestore-debug.log
 firebase-debug.log
 *service-account*.json
 !.env.example
+.old-firestore.rules
