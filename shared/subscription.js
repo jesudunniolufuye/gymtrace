@@ -29,6 +29,9 @@ export const PLANS = {
   },
 };
 
+/** The plan with this id, or null. Own properties only, so 'constructor' etc. are not plans. */
+export const findPlan = (id) => (typeof id === 'string' && Object.hasOwn(PLANS, id) ? PLANS[id] : null);
+
 export const MONTHLY_PERIOD_DAYS = 30;
 
 /** Accepts a Firestore Timestamp (client or admin), Date, millis or {seconds}. */
@@ -74,7 +77,7 @@ export function getSubscriptionStatus(subscription, nowMs = Date.now()) {
   const expiresAt = toMillis(subscription?.expiresAt);
   const credits = Number(subscription?.sessionCredits || 0);
 
-  if (!plan || !PLANS[plan] || !expiresAt) {
+  if (!plan || !findPlan(plan) || !expiresAt) {
     return { active: false, plan: null, expiresAt: null, credits: 0, label: 'No active plan', reason: 'none' };
   }
 
@@ -116,7 +119,7 @@ export class PurchaseError extends Error {
  * with times as millis. Throws PurchaseError when the purchase makes no sense.
  */
 export function applyPurchase(currentSubscription, planId, nowMs) {
-  if (!PLANS[planId]) throw new PurchaseError('invalid-plan', 'Unknown plan.');
+  if (!findPlan(planId)) throw new PurchaseError('invalid-plan', 'Unknown plan.');
   const current = getSubscriptionStatus(currentSubscription, nowMs);
 
   if (planId === 'monthly') {

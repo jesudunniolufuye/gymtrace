@@ -70,6 +70,14 @@ describe('POST /api/pay: input validation (NFR3)', () => {
     const r = await call(pay, { token: m.idToken, body: { plan: 'lifetime', idempotencyKey: key(), card: goodCard } });
     assert.equal(r.status, 400);
   });
+  test('plan names that are Object properties → 400, not 409 (QA F4)', async () => {
+    const m = await makeUser();
+    for (const plan of ['constructor', '__proto__', 'toString', 'hasOwnProperty']) {
+      const r = await call(pay, { token: m.idToken, body: { plan, idempotencyKey: key(), card: goodCard } });
+      assert.equal(r.status, 400, plan);
+    }
+    assert.equal((await paymentsOf(m.uid)).length, 0);
+  });
   test('bad card number → 400 naming the field, nothing written', async () => {
     const m = await makeUser();
     const r = await call(pay, { token: m.idToken, body: { plan: 'monthly', idempotencyKey: key(), card: { ...goodCard, number: '4084084084084082' } } });

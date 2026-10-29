@@ -10,7 +10,7 @@
 import { adminDb } from '../_lib/firebaseAdmin.js';
 import { HttpError, apiHandler, readJson, requireUser, send } from '../_lib/http.js';
 import { IDEMPOTENCY_KEY, checkEligibility, commitPayment, paymentRefFor, serializePayment } from '../_lib/payments.js';
-import { PLANS } from '../../shared/subscription.js';
+import { findPlan } from '../../shared/subscription.js';
 
 const METHODS = ['cash', 'transfer'];
 const MAX_AMOUNT = 10_000_000;
@@ -24,7 +24,7 @@ export default apiHandler('/admin/record-payment', ['POST'], async (req, res) =>
   const body = await readJson(req);
 
   // --- validate the form ---
-  const plan = PLANS[body.plan];
+  const plan = findPlan(body.plan);
   if (!plan) throw invalid('plan', 'Choose a valid plan.');
   if (!METHODS.includes(body.method)) throw invalid('method', 'Choose cash or bank transfer.');
 

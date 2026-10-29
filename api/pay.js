@@ -14,7 +14,7 @@ import { chargeCard, simulateNetworkDelay } from './_lib/gateway.js';
 import { cardSimulatorEnabled } from './_lib/config.js';
 import { IDEMPOTENCY_KEY, checkEligibility, commitPayment, paymentRefFor, serializePayment } from './_lib/payments.js';
 import { validateCard } from '../shared/card.js';
-import { PLANS } from '../shared/subscription.js';
+import { findPlan } from '../shared/subscription.js';
 
 export default apiHandler('/pay', ['POST'], async (req, res) => {
   if (!cardSimulatorEnabled()) {
@@ -25,7 +25,7 @@ export default apiHandler('/pay', ['POST'], async (req, res) => {
   const { uid, profile } = await requireUser(req, { roles: ['member'] });
   const body = await readJson(req);
 
-  const plan = PLANS[body.plan];
+  const plan = findPlan(body.plan);
   if (!plan) throw new HttpError(400, 'Choose a valid plan.');
   if (!IDEMPOTENCY_KEY.test(String(body.idempotencyKey ?? ''))) {
     throw new HttpError(400, 'Missing or invalid idempotency key.');

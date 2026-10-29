@@ -112,3 +112,18 @@ describe('applyPurchase', () => {
     assert.equal(PLANS.session.amount, 500);
   });
 });
+
+describe('findPlan (QA F4)', () => {
+  test('returns real plans only, not inherited Object properties', async () => {
+    const { findPlan } = await import('../../shared/subscription.js');
+    assert.equal(findPlan('monthly').id, 'monthly');
+    assert.equal(findPlan('session').id, 'session');
+    for (const bad of ['constructor', '__proto__', 'toString', 'valueOf', 'lifetime', '', null, undefined, 5, {}]) {
+      assert.equal(findPlan(bad), null, String(bad));
+    }
+  });
+  test('applyPurchase and getSubscriptionStatus treat them as unknown', () => {
+    assert.throws(() => applyPurchase(null, 'constructor', NOW), PurchaseError);
+    assert.equal(getSubscriptionStatus({ plan: 'constructor', expiresAt: NOW + DAY_MS }, NOW).active, false);
+  });
+});

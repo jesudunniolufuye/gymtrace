@@ -15,6 +15,18 @@ const record = async (body, token) =>
   call(recordPayment, { token: token ?? (await admin()).idToken, body: { idempotencyKey: key(), ...body } });
 const cashMonthly = (memberId) => ({ memberId, plan: 'monthly', method: 'cash', amount: 25000 });
 
+describe('POST /api/admin/record-payment: plan names (QA F4)', () => {
+  test('plan names that are Object properties → 400, nothing written', async () => {
+    const target = await makeUser();
+    for (const plan of ['constructor', '__proto__', 'toString', 'valueOf', 'hasOwnProperty']) {
+      const r = await record({ ...cashMonthly(target.uid), plan, note: 'testing' });
+      assert.equal(r.status, 400, plan);
+      assert.equal(r.body.field, 'plan', plan);
+    }
+    assert.equal((await paymentsOf(target.uid)).length, 0);
+  });
+});
+
 describe('POST /api/admin/record-payment: who may record', () => {
   test('members and trainers → 403, nothing written', async () => {
     const target = await makeUser();
