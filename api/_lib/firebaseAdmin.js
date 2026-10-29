@@ -6,7 +6,8 @@
 //   2. GOOGLE_APPLICATION_CREDENTIALS - path to the JSON file (local scripts)
 // With FIRESTORE_EMULATOR_HOST / FIREBASE_AUTH_EMULATOR_HOST set, the SDK
 // talks to the local emulators instead and needs no credentials.
-import { cert, getApps, initializeApp, applicationDefault } from 'firebase-admin/app';
+import { readFileSync } from 'node:fs';
+import { cert, getApps, initializeApp } from 'firebase-admin/app';
 import { getAuth } from 'firebase-admin/auth';
 import { getFirestore } from 'firebase-admin/firestore';
 
@@ -24,12 +25,16 @@ function init() {
   }
 
   if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    return initializeApp({ credential: applicationDefault() });
+    const serviceAccount = JSON.parse(readFileSync(process.env.GOOGLE_APPLICATION_CREDENTIALS, 'utf8'));
+    return initializeApp({ credential: cert(serviceAccount), projectId: serviceAccount.project_id });
   }
 
   throw new Error('No Firebase admin credentials: set FIREBASE_SERVICE_ACCOUNT or GOOGLE_APPLICATION_CREDENTIALS.');
 }
 
 const app = init();
+/** Which project we are talking to (never a secret). */
+export const adminProjectId = app.options.projectId;
+export const usingEmulator = Boolean(process.env.FIRESTORE_EMULATOR_HOST || process.env.FIREBASE_AUTH_EMULATOR_HOST);
 export const adminAuth = getAuth(app);
 export const adminDb = getFirestore(app);
