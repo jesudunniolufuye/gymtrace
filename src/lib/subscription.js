@@ -20,6 +20,14 @@ export const formatDate = (ms, withTime = false) =>
 export const formatTime = (ms) =>
   ms == null ? "—" : new Date(ms).toLocaleTimeString("en-GB", { timeZone: "Africa/Lagos", hour: "2-digit", minute: "2-digit" });
 
+/** How a payment was made, e.g. "Visa •••• 4081", "Cash", "Bank transfer". */
+export const paymentMethodLabel = (p) => {
+  const method = p?.method ?? "card";
+  if (method === "cash") return "Cash";
+  if (method === "transfer") return "Bank transfer";
+  return p?.cardBrand ? `${p.cardBrand} •••• ${p.cardLast4}` : "Card";
+};
+
 /** One-line description of a member's plan for dashboards and lists. */
 export const describeSubscription = (subscription, nowMs = Date.now()) => {
   const s = getSubscriptionStatus(subscription, nowMs);

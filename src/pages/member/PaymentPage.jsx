@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -11,7 +12,7 @@ import { getPaymentHistory, getPaymentOptions, payForPlan } from '../../services
 import { ApiError } from '../../services/apiClient';
 import { DAY_MS } from '../../../shared/subscription.js';
 import { TEST_CARDS, cvcValid, expiryValid, luhnValid } from '../../../shared/card.js';
-import { PLANS, formatDate, formatNaira, getSubscriptionStatus, toMillis } from '../../lib/subscription';
+import { PLANS, formatDate, formatNaira, getSubscriptionStatus, paymentMethodLabel, toMillis } from '../../lib/subscription';
 
 // Client-side checks give instant feedback; the server repeats them.
 const cardSchema = z.object({
@@ -373,19 +374,20 @@ const PaymentHistory = ({ rows, state }) => (
             <th className="px-6 py-3 font-medium">Date</th>
             <th className="px-6 py-3 font-medium">Plan</th>
             <th className="px-6 py-3 font-medium">Amount</th>
-            <th className="px-6 py-3 font-medium">Card</th>
+            <th className="px-6 py-3 font-medium">Method</th>
             <th className="px-6 py-3 font-medium">Status</th>
+            <th className="px-6 py-3 font-medium"><span className="sr-only">Receipt</span></th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-50">
           {state === 'loading' && (
-            <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">Loading payments…</td></tr>
+            <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">Loading payments…</td></tr>
           )}
           {state === 'error' && (
-            <tr><td colSpan="5" className="px-6 py-8 text-center text-red-600">Could not load your payment history. Refresh to try again.</td></tr>
+            <tr><td colSpan="6" className="px-6 py-8 text-center text-red-600">Could not load your payment history. Refresh to try again.</td></tr>
           )}
           {state === 'ready' && rows.length === 0 && (
-            <tr><td colSpan="5" className="px-6 py-8 text-center text-gray-500">No payments yet.</td></tr>
+            <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">No payments yet.</td></tr>
           )}
           {state === 'ready' &&
             rows.map((p) => (
@@ -406,7 +408,7 @@ const PaymentHistory = ({ rows, state }) => (
                   )}
                 </td>
                 <td className="px-6 py-4 text-sm font-bold text-gray-900">{formatNaira(p.amount)}</td>
-                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{p.cardBrand} •••• {p.cardLast4}</td>
+                <td className="px-6 py-4 text-sm text-gray-600 whitespace-nowrap">{paymentMethodLabel(p)}</td>
                 <td className="px-6 py-4">
                   {p.status === 'success' ? (
                     <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border bg-emerald-50 text-emerald-700 border-emerald-100">
@@ -419,6 +421,13 @@ const PaymentHistory = ({ rows, state }) => (
                   )}
                   {p.status !== 'success' && p.failureReason && (
                     <div className="text-xs text-gray-400 mt-1">{p.failureReason}</div>
+                  )}
+                </td>
+                <td className="px-6 py-4 text-right">
+                  {p.status === 'success' && (
+                    <Link to={`/receipts/${p.id}`} className="text-sm font-semibold text-primary hover:underline whitespace-nowrap">
+                      Receipt
+                    </Link>
                   )}
                 </td>
               </tr>

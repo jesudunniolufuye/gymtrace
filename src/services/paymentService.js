@@ -1,4 +1,4 @@
-import { collection, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { apiGet, apiPost } from "./apiClient";
 
@@ -8,6 +8,12 @@ import { apiGet, apiPost } from "./apiClient";
  */
 export const payForPlan = ({ plan, card, idempotencyKey }) =>
   apiPost("pay", { plan, card, idempotencyKey });
+
+/** One payment (for its receipt). Rules allow the member's own, or any for admins. */
+export const getPayment = async (paymentId) => {
+  const snap = await getDoc(doc(db, "payments", paymentId));
+  return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
 
 /** Which checkout to offer: { cardSimulator: boolean } (off in production). */
 export const getPaymentOptions = () => apiGet("payment-options");

@@ -26,6 +26,7 @@ import MembersPage from './pages/admin/MembersPage.jsx';
 import TrainersPage from './pages/admin/TrainersPage.jsx';
 import ReportsPage from './pages/admin/ReportsPage.jsx';
 import SettingsPage from './pages/admin/SettingsPage.jsx';
+import ReceiptPage from './pages/shared/ReceiptPage.jsx';
 
 function App() {
   return (
@@ -72,6 +73,9 @@ function App() {
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />
         </Route>
+
+        {/* Receipts: members see their own, admins see any (enforced by Firestore rules) */}
+        <Route path="/receipts/:paymentId" element={<ProtectedRoute allowedRoles={['member', 'admin']}><ReceiptPage /></ProtectedRoute>} />
 
         {/* Catch all - Redirect to Landing */}
         <Route path="*" element={<Navigate to="/" replace />} />
