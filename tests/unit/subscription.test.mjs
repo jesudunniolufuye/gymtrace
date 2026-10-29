@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, test } from 'node:test';
 import {
-  DAY_MS, PLANS, PurchaseError, applyPurchase, endOfGymDay, getSubscriptionStatus, toMillis,
+  DAY_MS, PLANS, PurchaseError, applyPurchase, endOfGymDay, getSubscriptionStatus, startOfGymDay, startOfGymMonth, toMillis,
 } from '../../shared/subscription.js';
 
 // 29 Oct 2026, 10:00 UTC = 11:00 in Lagos.
@@ -18,6 +18,18 @@ describe('endOfGymDay (Lagos time)', () => {
   });
   test('exactly midnight Lagos starts a new day', () => {
     assert.equal(endOfGymDay(LAGOS_MIDNIGHT), LAGOS_MIDNIGHT + DAY_MS);
+  });
+});
+
+describe('startOfGymDay / startOfGymMonth (Lagos time)', () => {
+  test('day starts at 23:00 UTC the previous evening', () => {
+    assert.equal(startOfGymDay(NOW), Date.UTC(2026, 9, 28, 23, 0));
+  });
+  test('month starts at 23:00 UTC on the last day of the previous month', () => {
+    assert.equal(startOfGymMonth(NOW), Date.UTC(2026, 8, 30, 23, 0));
+  });
+  test('23:30 UTC on 31 Oct is already November in Lagos', () => {
+    assert.equal(startOfGymMonth(Date.UTC(2026, 9, 31, 23, 30)), Date.UTC(2026, 9, 31, 23, 0));
   });
 });
 

@@ -7,7 +7,8 @@ import {
   FileBarChart, 
   Settings, 
   LogOut,
-  ScanLine
+  ScanLine,
+  Banknote
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logoutUser } from '../../../services/authService';
@@ -27,6 +28,7 @@ const AdminLayout = () => {
     { path: '/admin/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
     { path: '/admin/scanner', icon: ScanLine, label: 'Check-in Scanner' },
     { path: '/admin/members', icon: Users, label: 'Members' },
+    { path: '/admin/payments', icon: Banknote, label: 'Payments' },
     { path: '/admin/trainers', icon: Dumbbell, label: 'Trainers' },
     { path: '/admin/reports', icon: FileBarChart, label: 'Reports' },
     { path: '/admin/settings', icon: Settings, label: 'General Settings' },

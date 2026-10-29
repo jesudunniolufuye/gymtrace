@@ -1,4 +1,4 @@
-import { collection, doc, getDoc, getDocs, limit, orderBy, query, where } from "firebase/firestore";
+import { Timestamp, collection, doc, getDoc, getDocs, limit, orderBy, query, where } from "firebase/firestore";
 import { db } from "../lib/firebase";
 import { apiGet, apiPost } from "./apiClient";
 
@@ -13,6 +13,18 @@ export const payForPlan = ({ plan, card, idempotencyKey }) =>
 export const getPayment = async (paymentId) => {
   const snap = await getDoc(doc(db, "payments", paymentId));
   return snap.exists() ? { id: snap.id, ...snap.data() } : null;
+};
+
+/** Admin: every payment since `sinceMs`, newest first (single-field query, no extra index). */
+export const getPaymentsSince = async (sinceMs, max = 500) => {
+  const q = query(
+    collection(db, "payments"),
+    where("createdAt", ">=", Timestamp.fromMillis(sinceMs)),
+    orderBy("createdAt", "desc"),
+    limit(max)
+  );
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => ({ id: d.id, ...d.data() }));
 };
 
 /**

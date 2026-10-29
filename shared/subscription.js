@@ -53,6 +53,17 @@ export function endOfGymDay(nowMs) {
   return nextLocalMidnight - GYM_UTC_OFFSET_MS;
 }
 
+/** First instant of the current gym day (midnight Lagos time), as UTC millis. */
+export function startOfGymDay(nowMs) {
+  return endOfGymDay(nowMs) - DAY_MS;
+}
+
+/** First instant of the current calendar month in Lagos time, as UTC millis. */
+export function startOfGymMonth(nowMs) {
+  const local = new Date(nowMs + GYM_UTC_OFFSET_MS);
+  return Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), 1) - GYM_UTC_OFFSET_MS;
+}
+
 /**
  * What a subscription means right now.
  * Returns { active, plan, expiresAt, credits, label, reason }.

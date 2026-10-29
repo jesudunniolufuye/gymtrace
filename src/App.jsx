@@ -27,6 +27,7 @@ import TrainersPage from './pages/admin/TrainersPage.jsx';
 import ReportsPage from './pages/admin/ReportsPage.jsx';
 import SettingsPage from './pages/admin/SettingsPage.jsx';
 import ReceiptPage from './pages/shared/ReceiptPage.jsx';
+import AdminPaymentsPage from './pages/admin/PaymentsPage.jsx';
 
 function App() {
   return (
@@ -69,6 +70,7 @@ function App() {
           <Route path="dashboard" element={<AdminDashboard />} />
           <Route path="scanner" element={<ScannerPage />} />
           <Route path="members" element={<MembersPage />} />
+          <Route path="payments" element={<AdminPaymentsPage />} />
           <Route path="trainers" element={<TrainersPage />} />
           <Route path="reports" element={<ReportsPage />} />
           <Route path="settings" element={<SettingsPage />} />

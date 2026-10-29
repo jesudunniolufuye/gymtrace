@@ -1,7 +1,7 @@
 // Browser-side helpers around the shared plan rules (shared/subscription.js).
 import { PLANS, getSubscriptionStatus } from "../../shared/subscription.js";
 
-export { PLANS, getSubscriptionStatus, toMillis } from "../../shared/subscription.js";
+export { PLANS, getSubscriptionStatus, startOfGymDay, startOfGymMonth, toMillis } from "../../shared/subscription.js";
 
 const naira = new Intl.NumberFormat("en-NG", { style: "currency", currency: "NGN", maximumFractionDigits: 0 });
 export const formatNaira = (amount) => naira.format(amount ?? 0);
