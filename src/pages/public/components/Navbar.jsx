@@ -68,13 +68,14 @@ const Navbar = () => {
           <div className="hidden md:flex items-center space-x-8">
             <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className={getLinkClass('home')}>Home</a>
             <a href="#features" onClick={(e) => handleLinkClick(e, 'features')} className={getLinkClass('features')}>Features</a>
-            <a href="#cta" onClick={(e) => handleLinkClick(e, 'cta')} className={getLinkClass('cta')}>Get Started</a>
+            <a href="#cta" onClick={(e) => handleLinkClick(e, 'cta')} className={getLinkClass('cta')}>Try it</a>
+            <Link to="/guide" className="text-gray-600 hover:text-primary font-medium transition-colors">Guide</Link>
             <div className="flex items-center space-x-4 ml-4">
               <Link to="/login" className="text-gray-600 hover:text-primary font-medium transition-colors">
                 Login
               </Link>
               <Link to="/register" className="bg-primary text-white px-5 py-2.5 rounded-full font-semibold hover:bg-opacity-90 transition-all shadow-md hover:shadow-lg transform hover:-translate-y-0.5">
-                Get Started
+                Register
               </Link>
             </div>
           </div>
@@ -83,7 +84,9 @@ const Navbar = () => {
           <div className="md:hidden flex items-center">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-500 hover:text-gray-700 focus:outline-none p-2"
+              aria-label={isOpen ? 'Close menu' : 'Open menu'}
+              aria-expanded={isOpen}
+              className="text-gray-500 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary p-2"
             >
               {isOpen ? <X size={24} /> : <Menu size={24} />}
             </button>
@@ -97,13 +100,14 @@ const Navbar = () => {
           <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
             <a href="#home" onClick={(e) => handleLinkClick(e, 'home')} className={getMobileLinkClass('home')}>Home</a>
             <a href="#features" onClick={(e) => handleLinkClick(e, 'features')} className={getMobileLinkClass('features')}>Features</a>
-            <a href="#cta" onClick={(e) => handleLinkClick(e, 'cta')} className={getMobileLinkClass('cta')}>Get Started</a>
+            <a href="#cta" onClick={(e) => handleLinkClick(e, 'cta')} className={getMobileLinkClass('cta')}>Try it</a>
+            <Link to="/guide" onClick={() => setIsOpen(false)} className="block px-3 py-2 rounded-md text-base font-medium text-gray-700 hover:text-primary hover:bg-gray-50">Guide</Link>
             <div className="mt-4 pt-4 border-t border-gray-100 flex flex-col space-y-2 px-3">
               <Link to="/login" className="block text-center py-2 text-gray-600 hover:text-primary font-medium">
                 Login
               </Link>
               <Link to="/register" className="block text-center bg-primary text-white py-2 rounded-lg font-semibold hover:bg-opacity-90">
-                Get Started
+                Register
               </Link>
             </div>
           </div>

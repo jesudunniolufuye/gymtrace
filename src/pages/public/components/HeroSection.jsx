@@ -1,5 +1,5 @@
 import React from 'react';
-import { ArrowRight, Play } from 'lucide-react';
+import { ArrowRight, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
@@ -13,31 +13,32 @@ const HeroSection = () => {
       <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
+            <p className="inline-block mb-5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">
+              Demo project built for Babcock University Fitness Centre
+            </p>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-display font-bold text-background-dark leading-tight mb-6">
-              Track Your <span className="text-primary relative">Wait<svg className="absolute w-full h-3 -bottom-1 left-0 text-primary opacity-30" viewBox="0 0 100 10" preserveAspectRatio="none"><path d="M0 5 Q 50 10 100 5 L 100 0 Q 50 5 0 0 Z" fill="currentColor"/></svg></span> No More.
+              Smart gym <span className="text-primary">access</span> and management
             </h1>
             <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
-              Real-time gym analytics at your fingertips. See live occupancy, optimize your workout schedule, and verify membership instantly with QR codes.
+              Members show a QR code to get in, front-desk staff record payments and issue receipts, and trainers take
+              bookings. It runs on example data, so you can try every role.
             </p>
             <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4">
               <Link to="/register" className="w-full sm:w-auto px-8 py-4 bg-primary text-white font-semibold rounded-full shadow-lg hover:shadow-xl hover:bg-opacity-90 transform hover:-translate-y-1 transition-all flex items-center justify-center gap-2">
-                Get Started Today <ArrowRight size={20} />
+                Create an account <ArrowRight size={20} />
               </Link>
               <Link to="/login" className="w-full sm:w-auto px-8 py-4 bg-white text-gray-700 font-semibold rounded-full border border-gray-200 shadow-sm hover:bg-gray-50 flex items-center justify-center gap-2 transition-colors">
-                <Play size={20} className="text-primary fill-current" /> Login to Portal
+                Log in
               </Link>
             </div>
-            <div className="mt-10 flex items-center justify-center lg:justify-start gap-8 text-gray-500 text-sm font-medium">
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-green-500"></div> Real-time Tracking
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-purple-500"></div> Instant Access
-              </div>
+            <div className="mt-6 flex justify-center lg:justify-start">
+              <Link to="/guide" className="text-primary font-semibold hover:underline flex items-center gap-2">
+                <BookOpen size={18} /> Take the 10-minute guided tour
+              </Link>
             </div>
           </div>
 
-          <div className="relative flex justify-center lg:justify-end">
+          <div className="relative flex flex-col items-center lg:items-end">
              {/* Phone Mockup using divs */}
             <div className="relative mx-auto border-gray-900 bg-gray-900 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl">
               <div className="w-[148px] h-[18px] bg-gray-900 top-0 rounded-b-[1rem] left-1/2 -translate-x-1/2 absolute z-20"></div>
@@ -54,12 +55,12 @@ const HeroSection = () => {
                                 <img src="/logo.png" alt="GYMTRACE" className="w-6 h-6 brightness-200" />
                                 <div className="font-bold text-lg">GYMTRACE</div>
                             </div>
-                            <div className="w-8 h-8 rounded-full bg-white/20 overflow-hidden">
-                                <img src="https://i.pravatar.cc/100" alt="User" />
+                            <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-xs font-bold text-white">
+                                DM
                             </div>
                         </div>
                         <div className="text-white/90 text-sm">Welcome back,</div>
-                        <div className="text-white font-bold text-xl">Alex Johnson</div>
+                        <div className="text-white font-bold text-xl">Demo Member</div>
                     </div>
                     
                     {/* Fake Content */}
@@ -67,7 +68,7 @@ const HeroSection = () => {
                         {/* Box 1 */}
                         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex items-center justify-between">
                             <div>
-                                <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Status</div>
+                                <div className="text-xs text-gray-500 uppercase font-bold tracking-wider mb-1">Monthly plan</div>
                                 <div className="text-green-500 font-bold flex items-center gap-1">
                                     <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></span> Active
                                 </div>
@@ -80,8 +81,8 @@ const HeroSection = () => {
                         {/* Box 2 - Chart */}
                         <div className="bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                              <div className="flex justify-between items-center mb-4">
-                                <h3 className="font-bold text-gray-800">Activity</h3>
-                                <span className="text-xs text-gray-400">Weekly</span>
+                                <h3 className="font-bold text-gray-800">Visits</h3>
+                                <span className="text-xs text-gray-400">Example</span>
                              </div>
                              <div className="flex items-end justify-between h-24 gap-2">
                                 <div className="w-full bg-gray-100 rounded-t-sm h-[40%]"></div>
@@ -99,8 +100,8 @@ const HeroSection = () => {
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-gray-800">Yoga Flow</h4>
-                                    <p className="text-sm text-gray-500">Today, 5:00 PM</p>
+                                    <h4 className="font-bold text-gray-800">Personal training</h4>
+                                    <p className="text-sm text-gray-500">Next session, 5:00 PM</p>
                                 </div>
                             </div>
                          </div>
@@ -108,6 +109,7 @@ const HeroSection = () => {
                   </div>
               </div>
             </div>
+            <p className="mt-3 text-xs text-gray-400">Illustration with example data</p>
           </div>
         </div>
       </div>

@@ -1,37 +1,37 @@
 import React from 'react';
-import { CreditCard, QrCode, Calendar, BarChart3, Smartphone, Activity } from 'lucide-react';
+import { CreditCard, QrCode, Calendar, BarChart3, ShieldCheck, Activity } from 'lucide-react';
 
 const FeaturesSection = () => {
   const features = [
     {
       icon: <QrCode size={32} className="text-primary" />,
-      title: "Seamless Access",
-      description: "Enter the gym instantly with a secure, dynamic QR code generated right on your phone."
+      title: "QR check-in",
+      description: "Members show a signed QR code that changes every minute and works once. Staff scan it at the desk, and the system checks the plan and the account."
     },
     {
       icon: <BarChart3 size={32} className="text-blue-500" />,
-      title: "Real-Time Analytics",
-      description: "Check live occupancy levels before you leave home to avoid the crowds."
+      title: "Admin dashboard",
+      description: "Active members, today's check-ins, a 7-day chart, member plans and payment totals for front-desk staff."
     },
     {
       icon: <Calendar size={32} className="text-purple-500" />,
-      title: "Smart Scheduling",
-      description: "Book classes and sessions effortlessly with our integrated calendar system."
+      title: "Trainer booking",
+      description: "Members book a session with an available trainer and can cancel it. Trainers switch their availability on or off."
     },
     {
       icon: <CreditCard size={32} className="text-orange-500" />,
-      title: "Easy Payments",
-      description: "Manage your membership and payments securely within the app."
+      title: "Payments and receipts",
+      description: "Staff record cash or bank-transfer payments (monthly ₦25,000, day pass ₦500). Members see their history and printable receipts. There are no real online payments."
     },
     {
-      icon: <Smartphone size={32} className="text-pink-500" />,
-      title: "Mobile First",
-      description: "Designed for your smartphone, giving you control wherever you are."
+      icon: <ShieldCheck size={32} className="text-pink-500" />,
+      title: "Accounts and access",
+      description: "Email verification, password reset, three roles, and staff can deactivate an account without deleting its records."
     },
     {
       icon: <Activity size={32} className="text-green-600" />,
-      title: "Workout Tracking",
-      description: "Log your progress and visualize your improvements over time."
+      title: "Workout log",
+      description: "Members log workouts with their exercises and see this week's schedule."
     }
   ];
 
@@ -41,10 +41,10 @@ const FeaturesSection = () => {
         <div className="text-center mb-16">
           <h2 className="text-primary font-semibold tracking-wide uppercase text-sm mb-2">Features</h2>
           <h3 className="text-3xl md:text-4xl font-display font-bold text-background-dark mb-4">
-            Everything you need to <span className="text-primary">excel</span>
+            What it does <span className="text-primary">today</span>
           </h3>
           <p className="max-w-2xl mx-auto text-xl text-gray-500">
-            GYMTRACE provides a comprehensive suite of tools to enhance your gym experience.
+            Six parts of one demo system for members, trainers and front-desk staff.
           </p>
         </div>
 

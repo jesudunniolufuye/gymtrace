@@ -67,6 +67,4 @@ Allow about 10 minutes. You can use one browser for steps (a), (b), (d) and (e),
 
 ## Where to read more
 
-- `docs/PROJECT-REPORT.md` in the repository: what was built, how it was tested, the security findings and the known limits.
-- `docs/QA-FINDINGS.md`: the QA pass, with the issues found and which were fixed.
-- Repository: https://github.com/jesudunniolufuye/gymtrace
+- The project report that came with this link: what was built, how it was tested, the security findings and the known limits. Ask the developer if you don't have it.

@@ -38,3 +38,33 @@ describe('no stale reviewer emails (the old +alias addresses were replaced)', ()
     }
   });
 });
+
+describe('landing page stays honest about being a demo project', () => {
+  const files = [
+    'src/pages/public/components/HeroSection.jsx',
+    'src/pages/public/components/FeaturesSection.jsx',
+    'src/pages/public/components/CTASection.jsx',
+    'src/pages/public/components/Footer.jsx',
+    'src/pages/public/components/Navbar.jsx',
+  ];
+  const text = files.map(read).join('\n');
+
+  test('no claims of adoption, ratings, partners or features that do not exist', () => {
+    for (const bad of [/thousands/i, /trusted by/i, /testimonial/i, /\d[\d,]*\+? (members|users|gyms)/i, /live occupancy/i,
+      /real-time/i, /pravatar/i, /Alex Johnson/, /Yoga Flow/, /award/i, /rated|rating/i]) {
+      assert.doesNotMatch(text, bad, String(bad));
+    }
+  });
+  test('no dead # links, and no links to pages that do not exist', () => {
+    assert.doesNotMatch(text, /(href|to)="#"/);
+    for (const dead of ['Careers', 'Testimonials', 'Pricing', 'Blog', 'Contact', 'About Us']) assert.ok(!text.includes(dead), dead);
+  });
+  test('says it is a demo, and links to the guide, register and log in', () => {
+    assert.match(text, /Demo project built for Babcock University Fitness Centre/);
+    for (const to of ['/guide', '/register', '/login']) assert.ok(text.includes(`to="${to}"`), to);
+  });
+  test('nothing public refers to files or repositories a visitor cannot open', () => {
+    const publicSrc = [...files, 'src/pages/public/GuidePage.jsx', 'src/pages/public/PrivacyPage.jsx'].map(read).join('\n');
+    assert.doesNotMatch(publicSrc.replace(/^\s*\/\/.*$/gm, ''), /github\.com|docs\/|PROJECT-REPORT|\.md\b|claude|anthropic/i);
+  });
+});

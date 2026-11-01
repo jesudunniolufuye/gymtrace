@@ -146,10 +146,8 @@ const GuidePage = () => (
       <section className="space-y-2 text-sm text-slate-600 leading-relaxed">
         <h2 className="text-xl font-bold text-slate-900">Where to read more</h2>
         <p>
-          The project report (what was built, how it was tested, security findings and known limits) is at{' '}
-          <a className="text-emerald-700 underline" href="https://github.com/jesudunniolufuye/gymtrace/blob/main/docs/PROJECT-REPORT.md">
-            docs/PROJECT-REPORT.md
-          </a>.
+          The project report that came with this link covers what was built, how it was tested, the security findings and
+          the known limits. Ask the developer if you don't have it.
         </p>
       </section>
     </main>
