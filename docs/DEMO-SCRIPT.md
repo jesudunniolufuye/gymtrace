@@ -10,15 +10,15 @@ Runs against **production** (https://gymtrace-rose.vercel.app) with the seeded d
    ```bash
    GOOGLE_APPLICATION_CREDENTIALS=~/secrets/gymtrace-prod-sa.json SEED_PROJECT=gymtrace-prod \
    DEMO_ADMIN_EMAIL=molufuye420@gmail.com \
-   DEMO_MEMBER_EMAIL=molufuye420+demomember@gmail.com DEMO_TRAINER_EMAIL=molufuye420+demotrainer@gmail.com \
+   DEMO_MEMBER_EMAIL=jolufuye+demomember@gmail.com DEMO_TRAINER_EMAIL=jolufuye+demotrainer@gmail.com \
    npm run seed:demo
    ```
    - It resets every demo member's plan and status (e.g. reactivates anyone you deactivated in rehearsal). It never changes passwords.
    - Payments you recorded during rehearsal stay in the Payments list.
    - **Rehearsal side effects.** Re-running the seed restores plans and day-pass entries (e.g. `aisha.bello`'s entry), but check-ins from rehearsal stay in the attendance lists. A second check-in for the same member within 5 minutes shows **Already Checked In** instead of **Access Granted**. So: re-run the seed after rehearsing, and wait 5 minutes after any rehearsal check-in before the live run. If it still appears live, say so: it's the duplicate-scan protection.
 2. **Passwords for the two demo log-ins.** Use "Forgot password" on https://gymtrace-rose.vercel.app/forgot-password for:
-   - **Tolu Martins** (member): `molufuye420+demomember@gmail.com`
-   - **Bisi Lawal** (trainer): `molufuye420+demotrainer@gmail.com`
+   - **Tolu Martins** (member): `jolufuye+demomember@gmail.com`
+   - **Bisi Lawal** (trainer): `jolufuye+demotrainer@gmail.com`
 
    **Production emails land in Gmail spam: check spam first**, here and whenever a verification or reset email is needed during the demo.
 3. **Browsers.** Each browser holds one login per site.
@@ -134,7 +134,7 @@ Runs against **production** (https://gymtrace-rose.vercel.app) with the seeded d
 
 | Problem | Do this |
 |---|---|
-| Camera won't read the QR | Use manual check-in with `molufuye420+demomember@gmail.com` |
+| Camera won't read the QR | Use manual check-in with `jolufuye+demomember@gmail.com` |
 | Need a verification or reset email live | **Check Gmail spam first** (production sender) |
 | Console snippet shows 401 | Reload the page (fresh session), run again |
 | "Your session has expired" anywhere | Sign in again |

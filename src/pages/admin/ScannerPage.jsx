@@ -68,8 +68,8 @@ const ScannerPage = () => {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 space-y-6">
-          <div className="bg-black rounded-2xl overflow-hidden shadow-lg relative aspect-video flex items-center justify-center">
+        <div className="lg:col-span-2 space-y-6 min-w-0">
+          <div className={`bg-black rounded-2xl overflow-hidden shadow-lg relative flex items-center justify-center ${result ? '' : 'aspect-video'}`}>
             {!result ? (
               <div className="w-full h-full relative">
                 <Scanner
@@ -89,7 +89,7 @@ const ScannerPage = () => {
                 </div>
               </div>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center bg-slate-900 p-8 text-center" role="status">
+              <div className="w-full min-h-[16rem] flex flex-col items-center justify-center bg-slate-900 p-6 sm:p-8 text-center" role="status">
                 <div
                   className={`p-6 rounded-full border mb-4 ${
                     granted ? 'bg-emerald-500/10 border-emerald-500/20' : duplicate ? 'bg-amber-500/10 border-amber-500/20' : 'bg-red-500/10 border-red-500/20'
@@ -102,7 +102,7 @@ const ScannerPage = () => {
                 <h3 className={`text-2xl font-bold mb-2 ${granted ? 'text-white' : duplicate ? 'text-amber-300' : 'text-red-400'}`}>
                   {granted ? 'Access Granted' : duplicate ? 'Already Checked In' : 'Access Denied'}
                 </h3>
-                <p className="text-slate-300 mb-6">
+                <p className="text-slate-300 mb-6 break-words max-w-full">
                   {granted && `${result.member.name} is checked in.`}
                   {duplicate && `${result.member.name} was checked in at ${formatTime(result.checkedInAt)}. No extra entry was used.`}
                   {result.kind === 'denied' && result.message}
@@ -132,17 +132,17 @@ const ScannerPage = () => {
 
           {(granted || duplicate) && (
             <div className="bg-white p-6 rounded-2xl shadow-sm border border-emerald-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 min-w-0">
                 <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center text-slate-300 shrink-0">
                   <User size={32} />
                 </div>
-                <div>
-                  <h3 className="font-bold text-lg text-slate-800">{result.member.name}</h3>
-                  <p className="text-sm text-slate-500">{result.member.email}</p>
-                  <p className="text-sm text-emerald-700 font-medium">{describeSubscription(result.member.subscription)}</p>
+                <div className="min-w-0">
+                  <h3 className="font-bold text-lg text-slate-800 break-words">{result.member.name}</h3>
+                  <p className="text-sm text-slate-500 break-all">{result.member.email}</p>
+                  <p className="text-sm text-emerald-700 font-medium break-words">{describeSubscription(result.member.subscription)}</p>
                 </div>
               </div>
-              <div className="sm:text-right">
+              <div className="sm:text-right min-w-0">
                 <p className="text-xs text-slate-400 uppercase tracking-wider font-semibold">Member ID</p>
                 <p className="font-mono text-slate-700 text-xs break-all">{result.member.id}</p>
               </div>
@@ -150,7 +150,7 @@ const ScannerPage = () => {
           )}
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
             <h3 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
               <Search size={18} className="text-slate-400" />

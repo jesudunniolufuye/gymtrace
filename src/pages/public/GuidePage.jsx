@@ -5,9 +5,9 @@ import logo from '../../assets/logo.png';
 
 // Public reviewer guide. Mirrors docs/REVIEWER-GUIDE.md: keep the two in step.
 const LOGINS = [
-  { role: 'Admin (front desk)', email: 'molufuye420+reviewer@gmail.com', href: '/admin/login' },
-  { role: 'Member (Tolu Martins)', email: 'molufuye420+demomember@gmail.com', href: '/login' },
-  { role: 'Trainer (Bisi Lawal)', email: 'molufuye420+demotrainer@gmail.com', href: '/login' },
+  { role: 'Admin (front desk)', email: 'jolufuye@gmail.com', href: '/admin/login' },
+  { role: 'Member (Tolu Martins)', email: 'jolufuye+demomember@gmail.com', href: '/login' },
+  { role: 'Trainer (Bisi Lawal)', email: 'jolufuye+demotrainer@gmail.com', href: '/login' },
 ];
 
 const STEPS = [
@@ -44,7 +44,7 @@ const STEPS = [
     minutes: 2,
     items: [
       'With a camera: in a second browser, sign in as admin, open Check-in Scanner, allow the camera and hold the phone to it. Expect "Access Granted". Scan the same code again: "This QR code has already been used".',
-      'Without a camera: on the scanner page, type molufuye420+demomember@gmail.com into manual check-in. Expect "Access Granted".',
+      'Without a camera: on the scanner page, type jolufuye+demomember@gmail.com into manual check-in. Expect "Access Granted".',
       'Try daniel.okoro@example.edu: "Monthly membership has expired."',
     ],
   },

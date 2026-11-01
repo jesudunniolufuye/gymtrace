@@ -11,9 +11,9 @@ Use **Forgot password** on the login page to set a password for each account. (T
 
 | Role | Email | Where to sign in |
 |---|---|---|
-| Admin (front desk) | `molufuye420+reviewer@gmail.com` | https://gymtrace-rose.vercel.app/admin/login |
-| Member (Tolu Martins) | `molufuye420+demomember@gmail.com` | https://gymtrace-rose.vercel.app/login |
-| Trainer (Bisi Lawal) | `molufuye420+demotrainer@gmail.com` | https://gymtrace-rose.vercel.app/login |
+| Admin (front desk) | `jolufuye@gmail.com` | https://gymtrace-rose.vercel.app/admin/login |
+| Member (Tolu Martins) | `jolufuye+demomember@gmail.com` | https://gymtrace-rose.vercel.app/login |
+| Trainer (Bisi Lawal) | `jolufuye+demotrainer@gmail.com` | https://gymtrace-rose.vercel.app/login |
 
 **Emails land in spam.** Verification and password-reset emails are sent from the production sender, which Gmail files as spam. Check the spam folder first, every time.
 
@@ -41,7 +41,7 @@ Allow about 10 minutes. You can use one browser for steps (a), (b), (d) and (e),
 **(d) Check the member in (2 min)**
 - *With a camera:* in a second browser, sign in as admin, open **Check-in Scanner**, allow the camera, and hold the phone to it. Expect **Access Granted**.
   - Scan the same code again. Expect **This QR code has already been used**.
-- *Without a camera:* on the scanner page, type `molufuye420+demomember@gmail.com` into manual check-in and click **Check In**. Expect **Access Granted**.
+- *Without a camera:* on the scanner page, type `jolufuye+demomember@gmail.com` into manual check-in and click **Check In**. Expect **Access Granted**.
 - Also try `daniel.okoro@example.edu`: **Monthly membership has expired.**
 
 **(e) Trainer view and booking (2 min)**

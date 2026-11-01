@@ -7,7 +7,7 @@ const read = (p) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8')
 describe('reviewer guide: /guide page, docs/REVIEWER-GUIDE.md and footer stay in step', () => {
   const page = read('src/pages/public/GuidePage.jsx');
   const doc = read('docs/REVIEWER-GUIDE.md');
-  const emails = ['molufuye420+reviewer@gmail.com', 'molufuye420+demomember@gmail.com', 'molufuye420+demotrainer@gmail.com'];
+  const emails = ['jolufuye@gmail.com', 'jolufuye+demomember@gmail.com', 'jolufuye+demotrainer@gmail.com'];
 
   test('the three logins appear in both the page and the markdown guide', () => {
     for (const e of emails) {
@@ -27,6 +27,14 @@ describe('reviewer guide: /guide page, docs/REVIEWER-GUIDE.md and footer stay in
     for (const step of ['(a)', '(b)', '(c)', '(d)', '(e)', '(f)']) {
       assert.ok(page.includes(step), `page ${step}`);
       assert.ok(doc.includes(step), `doc ${step}`);
+    }
+  });
+});
+
+describe('no stale reviewer emails (the old +alias addresses were replaced)', () => {
+  test('docs, guide page and seed notes name the current reviewer mailbox only', () => {
+    for (const f of ['docs/REVIEWER-GUIDE.md', 'docs/DEMO-SCRIPT.md', 'src/pages/public/GuidePage.jsx', 'scripts/seed-demo.mjs']) {
+      assert.doesNotMatch(read(f), /molufuye420\+(reviewer|demomember|demotrainer)@/, f);
     }
   });
 });
