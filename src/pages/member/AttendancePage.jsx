@@ -125,7 +125,7 @@ const AttendancePage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input 
               type="text" 
-              placeholder="Search history..." 
+              aria-label="Search attendance history" placeholder="Search history..." 
               className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent w-full sm:w-64"
             />
           </div>
@@ -220,10 +220,6 @@ const AttendancePage = () => {
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
           <p className="text-sm text-gray-500">Showing <span className="font-medium">{attendanceHistory.length}</span> results</p>
-          <div className="flex gap-2">
-            <button className="px-3 py-1 text-sm border border-gray-200 rounded bg-white text-gray-600 disabled:opacity-50" disabled>Previous</button>
-            <button className="px-3 py-1 text-sm border border-gray-200 rounded bg-white text-gray-600 hover:bg-gray-50" disabled>Next</button>
-          </div>
         </div>
       </div>
     </div>

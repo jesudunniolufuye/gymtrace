@@ -92,7 +92,7 @@ Runs against **production** (https://gymtrace-rose.vercel.app) with the seeded d
 1. **Admin → Members**, search `kelechi` (no plan) → **Record payment** → Monthly, **Cash**, receipt book number e.g. `RB-777` → **Record ₦25,000**.
 2. **View receipt** → point out the receipt number, valid dates and "Recorded by Michael Olufuye" → **Print / Save PDF** (show the dialog, cancel).
 3. **Payments** page: the **Today** cash total went up by ₦25,000.
-4. **Phone (Tolu):** **Generate Qr**. The code changes every minute: "signed by the server, works once."
+4. **Phone (Tolu):** **Generate QR**. The code changes every minute: "signed by the server, works once."
 5. **Admin → Check-in Scanner**: hold the phone to the camera → **Access Granted · Tolu Martins · Monthly Membership, valid until …**.
 6. **Scan Next Member**, then scan the **same** code again → **"This QR code has already been used."**
 7. Manual check-in. "In real use: always check the student ID card first." Type each email and click **Check In**:

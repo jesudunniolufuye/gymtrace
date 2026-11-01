@@ -5,13 +5,11 @@ import { useAuth } from '../../context/AuthContext';
 import { getAllTrainers } from '../../services/trainerService';
 import { createBooking, getBookingsByMember, updateBookingStatus } from '../../services/bookingService';
 import { gymDateString, gymTimeString } from '../../lib/subscription';
+import { formatSessionDate, initialsOf, specialtyOptions } from '../../lib/display';
 
 const SESSION_TIMES = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
-const formatSessionDate = (dateStr) =>
-  new Date(`${dateStr}T12:00:00`).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' });
 
-const specialties = ['All', 'Bodybuilding', 'Cardio', 'Yoga', 'CrossFit', 'Rehabilitation', 'Powerlifting', 'Nutrition'];
 
 const BookingPage = () => {
   const { user, userData } = useAuth();
@@ -122,7 +120,7 @@ const BookingPage = () => {
     }
   };
 
-  const getInitials = (name) => (name || '?').split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2);
+  const getInitials = initialsOf;
 
   return (
     <div className="min-h-screen bg-background-light p-6 lg:p-8 font-sans">
@@ -178,7 +176,7 @@ const BookingPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
             <input
               type="text"
-              placeholder="Search by name or specialty..."
+              aria-label="Search trainers by name or specialty" placeholder="Search by name or specialty..."
               className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -187,7 +185,7 @@ const BookingPage = () => {
           <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
             <span className="text-gray-500 text-sm whitespace-nowrap">Filter by:</span>
             <div className="flex gap-2">
-              {specialties.slice(0, 5).map((spec) => (
+              {specialtyOptions(trainers).map((spec) => (
                 <button
                   key={spec}
                   onClick={() => setSelectedSpecialty(spec)}

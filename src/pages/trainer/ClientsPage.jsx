@@ -43,13 +43,13 @@ const ClientsPage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-gray-900 tracking-tight">My Clients</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage and track your assigned clients.</p>
+          <p className="text-gray-500 text-sm mt-1">Members who have booked sessions with you.</p>
         </div>
         <div className="relative">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
           <input
             type="text"
-            placeholder="Search clients..."
+            aria-label="Search clients" placeholder="Search clients..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             className="pl-10 pr-4 py-2.5 bg-white border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all w-full sm:w-64"
@@ -108,8 +108,8 @@ const ClientsPage = () => {
           <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-4 text-gray-400">
             <User size={32} />
           </div>
-          <h3 className="text-lg font-bold text-gray-900">No Clients Assigned</h3>
-          <p className="text-gray-500 mt-2">You don't have any clients assigned yet.</p>
+          <h3 className="text-lg font-bold text-gray-900">No clients yet</h3>
+          <p className="text-gray-500 mt-2">Members who book a session with you will appear here.</p>
         </div>
       )}
     </div>

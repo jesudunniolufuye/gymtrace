@@ -3,6 +3,7 @@ import { Search, Star, Users, Briefcase, Edit, X, Loader2, UserX, UserCheck } fr
 import { toast } from 'sonner';
 import { getAllTrainers, updateTrainer } from '../../services/trainerService';
 import AccountStatusModal from './components/AccountStatusModal';
+import { initialsOf } from '../../lib/display';
 
 // Trainer status (set by the gym): 'active' = approved for booking,
 // 'inactive' = not approved (new trainers start here), 'disabled' = account
@@ -83,14 +84,14 @@ const TrainersPage = () => {
     }
   };
 
-  const getInitials = (name) => (name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const getInitials = initialsOf;
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Trainer Management</h1>
-          <p className="text-gray-500">Manage trainers and their schedules</p>
+          <p className="text-gray-500">Approve trainers for booking and see who is taking bookings</p>
         </div>
       </div>
 
@@ -100,7 +101,7 @@ const TrainersPage = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search trainers..."
+            aria-label="Search trainers" placeholder="Search trainers..."
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

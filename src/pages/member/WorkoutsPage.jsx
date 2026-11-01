@@ -273,7 +273,7 @@ const WorkoutsPage = () => {
                     </div>
                     <h3 className="text-lg font-bold text-gray-900">No Workout Logged Today</h3>
                     <p className="text-gray-500 mt-2 max-w-sm">
-                      Log a workout to track your progress and build your streak.
+                      Log a workout to see it here and count it toward your weekly goal.
                     </p>
                     <button onClick={() => setShowModal(true)} className="mt-6 px-5 py-2.5 bg-emerald-600 text-white font-medium rounded-lg hover:bg-emerald-700 transition-colors">
                       Log Workout

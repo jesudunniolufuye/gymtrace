@@ -5,6 +5,7 @@ import { getAllMembers, updateMember } from '../../services/memberService';
 import RecordPaymentModal from './components/RecordPaymentModal';
 import AccountStatusModal from './components/AccountStatusModal';
 import { PLANS, formatDate as formatLagosDate, getSubscriptionStatus } from '../../lib/subscription';
+import { initialsOf } from '../../lib/display';
 
 /** FR18: each member's real plan, from the server-written subscription. */
 const PlanBadge = ({ subscription, now }) => {
@@ -119,7 +120,7 @@ const MembersPage = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
           <input
             type="text"
-            placeholder="Search members..."
+            aria-label="Search members" placeholder="Search members..."
             className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -161,12 +162,12 @@ const MembersPage = () => {
                   <tr key={member.uid} className="hover:bg-gray-50/50 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
-                          {(member.name || '?').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)}
+                        <div className="w-10 h-10 shrink-0 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-semibold text-sm">
+                          {initialsOf(member.name)}
                         </div>
-                        <div>
-                          <div className="font-medium text-gray-900">{member.name}</div>
-                          <div className="text-sm text-gray-500">{member.email}</div>
+                        <div className="min-w-0 max-w-[16rem]">
+                          <div className="font-medium text-gray-900 break-words">{member.name}</div>
+                          <div className="text-sm text-gray-500 break-all">{member.email}</div>
                         </div>
                       </div>
                     </td>

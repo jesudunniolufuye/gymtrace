@@ -4,6 +4,7 @@ import { Search, Filter, CheckCircle2, XCircle, Clock, Calendar, MoreVertical, D
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { getTrainerBookings, updateBookingStatus } from '../../services/bookingService';
+import { compareSessionsAsc } from '../../lib/display';
 
 const SessionsPage = () => {
   const { user } = useAuth();
@@ -34,6 +35,8 @@ const SessionsPage = () => {
       (s.sessionType || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesTab && matchesSearch;
   });
+  // Upcoming: soonest first (bookings come back in creation order).
+  if (activeTab === 'upcoming') filteredSessions.sort(compareSessionsAsc);
 
   const handleComplete = async (id) => {
     try {
@@ -79,7 +82,7 @@ const SessionsPage = () => {
       {/* Header Section */}
       <div>
         <h1 className="text-2xl font-display font-bold text-gray-900 tracking-tight">Session History</h1>
-        <p className="text-gray-500 text-sm mt-1">Track attendance and history of your training sessions.</p>
+        <p className="text-gray-500 text-sm mt-1">Your upcoming, completed and cancelled training sessions.</p>
       </div>
 
       {/* Controls & Tabs */}
@@ -107,7 +110,7 @@ const SessionsPage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={16} />
             <input
               type="text"
-              placeholder="Search sessions..."
+              aria-label="Search sessions" placeholder="Search sessions..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-9 pr-4 py-2 bg-white border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all w-64"

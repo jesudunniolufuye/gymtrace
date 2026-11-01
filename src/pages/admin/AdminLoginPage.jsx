@@ -84,7 +84,7 @@ const AdminLoginPage = () => {
             
             {/* EMAIL INPUT */}
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">Email Address</label>
+              <label htmlFor="auth-email" className="block text-sm font-semibold text-slate-300 mb-2">Email Address</label>
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input 
@@ -93,7 +93,7 @@ const AdminLoginPage = () => {
                   className={`w-full bg-slate-900/50 border rounded-xl py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.email ? 'border-red-500/50' : 'border-slate-700'
                   }`}
-                  {...register('email')}
+                  id="auth-email" {...register('email')}
                 />
               </div>
               {errors.email && (
@@ -103,7 +103,7 @@ const AdminLoginPage = () => {
 
             {/* PASSWORD INPUT */}
             <div>
-              <label className="block text-sm font-semibold text-slate-300 mb-2">Password</label>
+              <label htmlFor="auth-password" className="block text-sm font-semibold text-slate-300 mb-2">Password</label>
               <div className="relative">
                 <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
                 <input 
@@ -112,7 +112,7 @@ const AdminLoginPage = () => {
                   className={`w-full bg-slate-900/50 border rounded-xl py-3 pl-12 pr-4 text-white placeholder-slate-600 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.password ? 'border-red-500/50' : 'border-slate-700'
                   }`}
-                  {...register('password')}
+                  id="auth-password" {...register('password')}
                 />
               </div>
               {errors.password && (

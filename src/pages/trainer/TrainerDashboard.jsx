@@ -5,6 +5,7 @@ import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { getTrainerClients, getTodayTrainerBookings, getTrainerBookings } from '../../services/bookingService';
 import { setMyAvailability } from '../../services/trainerService';
+import { compareSessionsAsc } from '../../lib/display';
 
 /**
  * FR13: the trainer opens or closes their diary for NEW bookings. Existing
@@ -82,7 +83,7 @@ const TrainerDashboard = () => {
                 setTodayCount(today.length);
                 setCompletedCount(allSessions.filter((s) => s.status === 'completed').length);
                 setUpcomingSessions(
-                    allSessions.filter((s) => s.status === 'upcoming').slice(0, 5)
+                    allSessions.filter((s) => s.status === 'upcoming').sort(compareSessionsAsc).slice(0, 5)
                 );
             } catch (error) { console.error(error);
                 // silent

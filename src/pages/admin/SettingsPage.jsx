@@ -137,10 +137,14 @@ const SettingsPage = () => {
             <Building size={20} className="text-blue-500" />
             General Information
           </div>
+          <p className="text-sm text-gray-500 mb-4">
+            These details are stored, but this demo doesn't show them anywhere else yet.
+          </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Gym Name</label>
+              <label htmlFor="setting-gymName" className="text-sm font-medium text-gray-700">Gym Name</label>
               <input
+                id="setting-gymName"
                 type="text"
                 name="gymName"
                 value={formData.gymName}
@@ -149,10 +153,11 @@ const SettingsPage = () => {
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Support Email</label>
+              <label htmlFor="setting-email" className="text-sm font-medium text-gray-700">Support Email</label>
               <div className="relative">
                 <Mail size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
+                  id="setting-email"
                   type="email"
                   name="email"
                   value={formData.email}
@@ -162,10 +167,11 @@ const SettingsPage = () => {
               </div>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-gray-700">Phone Number</label>
+              <label htmlFor="setting-phone" className="text-sm font-medium text-gray-700">Phone Number</label>
               <div className="relative">
                 <Phone size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
                 <input
+                  id="setting-phone"
                   type="tel"
                   name="phone"
                   value={formData.phone}

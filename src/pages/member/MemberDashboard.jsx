@@ -18,6 +18,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAttendanceByMember, getWeeklyAttendance } from '../../services/attendanceService';
 import { getBookingsByMember } from '../../services/bookingService';
 import { describeSubscription, getSubscriptionStatus, PLANS } from '../../lib/subscription';
+import { formatSessionDate } from '../../lib/display';
 
 const MemberDashboard = () => {
     const { user, userData } = useAuth();
@@ -117,7 +118,7 @@ const MemberDashboard = () => {
               className="flex items-center gap-2 bg-emerald-500 text-white px-5 py-2.5 rounded-xl font-semibold hover:bg-emerald-600 transition-all shadow-lg shadow-emerald-200 active:scale-95"
             >
               <QrCode size={20} />
-              <span>Generate Qr</span>
+              <span>Generate QR</span>
             </Link>
           </div>
         </header>
@@ -167,7 +168,7 @@ const MemberDashboard = () => {
                {nextBooking ? (
                  <>
                    <h3 className="text-lg font-bold text-gray-900 mt-1">{nextBooking.trainerName}</h3>
-                   <p className="text-xs text-gray-400 mt-0.5">{nextBooking.date} · {nextBooking.time}</p>
+                   <p className="text-xs text-gray-400 mt-0.5">{formatSessionDate(nextBooking.date)} · {nextBooking.time}</p>
                  </>
                ) : (
                  <>
@@ -192,7 +193,7 @@ const MemberDashboard = () => {
                      <div className="p-2 bg-white/10 rounded-lg backdrop-blur-sm">
                         <Zap size={20} className="text-emerald-400"/>
                      </div>
-                     <span className="text-gray-300 font-medium text-sm">Target Plan</span>
+                     <span className="text-gray-300 font-medium text-sm">Membership</span>
                 </div>
                 <h2 className="text-3xl font-bold tracking-tight mb-2 capitalize">{displayPlanName}</h2>
                 <div className="flex items-center gap-2 text-emerald-400 text-xs font-medium bg-emerald-400/10 w-fit px-2 py-1 rounded-full">
@@ -219,6 +220,7 @@ const MemberDashboard = () => {
                   <p className="text-sm text-gray-500">Your gym visits {activityView === 'This Week' ? 'this week' : 'this past month'}</p>
                </div>
                <select 
+                  aria-label="Activity period"
                   value={activityView}
                   onChange={(e) => setActivityView(e.target.value)}
                   className="bg-gray-50 border border-gray-200 text-gray-600 text-sm rounded-lg focus:ring-emerald-500 focus:border-emerald-500 block px-3 py-1.5 outline-none"

@@ -107,7 +107,7 @@ const RegisterPage = () => {
           
           {/* FULL NAME INPUT */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
+            <label htmlFor="auth-fullName" className="block text-sm font-semibold text-slate-700 mb-2">Full Name</label>
             <div className="relative">
               <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input 
@@ -116,7 +116,7 @@ const RegisterPage = () => {
                 className={`w-full bg-slate-50 border rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.fullName ? 'border-red-500' : 'border-slate-200'
                 }`}
-                {...register('fullName')}
+                id="auth-fullName" {...register('fullName')}
               />
             </div>
             {errors.fullName && (
@@ -126,7 +126,7 @@ const RegisterPage = () => {
 
           {/* EMAIL INPUT */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+            <label htmlFor="auth-email" className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input 
@@ -135,7 +135,7 @@ const RegisterPage = () => {
                 className={`w-full bg-slate-50 border rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.email ? 'border-red-500' : 'border-slate-200'
                 }`}
-                {...register('email')}
+                id="auth-email" {...register('email')}
               />
             </div>
             {errors.email && (
@@ -178,7 +178,7 @@ const RegisterPage = () => {
 
           {/* PASSWORD INPUT */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
+            <label htmlFor="auth-password" className="block text-sm font-semibold text-slate-700 mb-2">Password</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input 
@@ -187,7 +187,7 @@ const RegisterPage = () => {
                 className={`w-full bg-slate-50 border rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.password ? 'border-red-500' : 'border-slate-200'
                 }`}
-                {...register('password')}
+                id="auth-password" {...register('password')}
               />
             </div>
             {errors.password && (
@@ -197,7 +197,7 @@ const RegisterPage = () => {
 
           {/* CONFIRM PASSWORD INPUT */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password</label>
+            <label htmlFor="auth-confirmPassword" className="block text-sm font-semibold text-slate-700 mb-2">Confirm Password</label>
             <div className="relative">
               <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input 
@@ -206,7 +206,7 @@ const RegisterPage = () => {
                 className={`w-full bg-slate-50 border rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.confirmPassword ? 'border-red-500' : 'border-slate-200'
                 }`}
-                {...register('confirmPassword')}
+                id="auth-confirmPassword" {...register('confirmPassword')}
               />
             </div>
             {errors.confirmPassword && (

@@ -17,6 +17,7 @@ import { useAuth } from '../../../context/AuthContext';
 import { logoutUser } from '../../../services/authService';
 import { planSummary } from '../../../lib/subscription';
 import logo from '../../../assets/logo.png';
+import { initialsOf } from '../../../lib/display';
 
 const MemberLayout = () => {
   const location = useLocation();
@@ -24,7 +25,7 @@ const MemberLayout = () => {
   const { userData } = useAuth();
 
   const initials = userData?.name
-    ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? initialsOf(userData.name)
     : '??';
 
   const handleLogout = async () => {
@@ -94,7 +95,16 @@ const MemberLayout = () => {
                 {planSummary(userData?.subscription).label}
               </p>
             </div>
-            <LogOut size={18} onClick={(e) => { e.preventDefault(); handleLogout(); }} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label="Sign out"
+              onClick={(e) => { e.preventDefault(); handleLogout(); }}
+              onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); handleLogout(); } }}
+              className="text-gray-400 group-hover:text-red-500 transition-colors"
+            >
+              <LogOut size={18} />
+            </span>
           </Link>
         </div>
       </aside>

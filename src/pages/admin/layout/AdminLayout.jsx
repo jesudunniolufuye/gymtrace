@@ -97,6 +97,7 @@ const AdminLayout = () => {
             </div>
             <button 
               onClick={handleLogout}
+              aria-label="Sign out"
               className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
             >
               <LogOut size={20} />

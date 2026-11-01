@@ -88,15 +88,15 @@ const SchedulePage = () => {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-display font-bold text-gray-900 tracking-tight">Weekly Schedule</h1>
-          <p className="text-gray-500 text-sm mt-1">Manage your classes and personal training sessions.</p>
+          <p className="text-gray-500 text-sm mt-1">Your personal training sessions this week.</p>
         </div>
 
         <div className="flex items-center gap-3 bg-white p-1 rounded-lg border border-gray-200 shadow-sm">
-          <button onClick={prevWeek} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
+          <button onClick={prevWeek} aria-label="Previous week" className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
             <ChevronLeft size={20} />
           </button>
           <span className="text-sm font-medium px-2 min-w-[180px] text-center">{weekLabel}</span>
-          <button onClick={nextWeek} className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
+          <button onClick={nextWeek} aria-label="Next week" className="p-1.5 hover:bg-gray-100 rounded-md text-gray-600 transition-colors">
             <ChevronRight size={20} />
           </button>
         </div>

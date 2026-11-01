@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { User, Mail, Phone, Shield, Camera, ChevronRight, LogOut } from 'lucide-react';
+import { User, Mail, Phone, Shield, ChevronRight, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
@@ -7,6 +7,7 @@ import { updateUserDoc } from '../../services/userService';
 import { logoutUser } from '../../services/authService';
 import { validateName } from '../../../shared/name.js';
 import { planSummary } from '../../lib/subscription';
+import { initialsOf } from '../../lib/display';
 
 const ProfilePage = () => {
   const navigate = useNavigate();
@@ -49,7 +50,7 @@ const ProfilePage = () => {
   const plan = planSummary(userData?.subscription);
 
   const initials = userData?.name
-    ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? initialsOf(userData.name)
     : '??';
 
   return (
@@ -62,9 +63,6 @@ const ProfilePage = () => {
           <div className="w-24 h-24 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600 font-bold text-3xl border-4 border-white shadow-md">
             {initials}
           </div>
-          <button className="absolute bottom-0 right-0 bg-gray-900 text-white p-2 rounded-full hover:bg-gray-800 transition-colors">
-            <Camera size={16} />
-          </button>
         </div>
         <div className="text-center md:text-left flex-1">
           <h2 className="text-xl font-bold text-gray-900">{formData.name}</h2>
@@ -93,11 +91,12 @@ const ProfilePage = () => {
             <h3 className="text-lg font-bold text-gray-900 mb-4">Personal Information</h3>
             <form className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
+                <label htmlFor="profile-name" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Full Name</label>
                 <div className="relative">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                   <input
                     type="text"
+                    id="profile-name"
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
@@ -108,13 +107,14 @@ const ProfilePage = () => {
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
+                  <label htmlFor="profile-email" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">
                     Email Address <span className="text-gray-400 normal-case font-normal text-[10px] ml-1">(cannot be changed here)</span>
                   </label>
                   <div className="relative">
                     <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="email"
+                      id="profile-email"
                       name="email"
                       value={formData.email}
                       disabled={true}
@@ -124,11 +124,12 @@ const ProfilePage = () => {
                   </div>
                 </div>
                 <div>
-                  <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone Number</label>
+                  <label htmlFor="profile-phone" className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1.5">Phone Number</label>
                   <div className="relative">
                     <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                     <input
                       type="tel"
+                      id="profile-phone"
                       name="phone"
                       value={formData.phone}
                       onChange={handleChange}
@@ -163,7 +164,7 @@ const ProfilePage = () => {
 
           {/* Settings */}
           <div className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
-            <h3 className="text-lg font-bold text-gray-900 mb-4">Settings</h3>
+            <h3 className="text-lg font-bold text-gray-900 mb-4">Account</h3>
             <div className="space-y-4">
               <div className=" pt-2 border-t border-gray-100">
                 <button onClick={handleSignOut} className="w-full flex items-center justify-between p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors text-sm font-semibold">

@@ -11,6 +11,7 @@ import {
 import { useAuth } from '../../../context/AuthContext';
 import { logoutUser } from '../../../services/authService';
 import logo from '../../../assets/logo.png';
+import { initialsOf } from '../../../lib/display';
 
 const TrainerLayout = () => {
   const location = useLocation();
@@ -18,7 +19,7 @@ const TrainerLayout = () => {
   const { userData } = useAuth();
 
   const initials = userData?.name
-    ? userData.name.split(' ').map((n) => n[0]).join('').toUpperCase().slice(0, 2)
+    ? initialsOf(userData.name)
     : '??';
 
   const handleLogout = async () => {
@@ -87,7 +88,9 @@ const TrainerLayout = () => {
                 Trainer
               </p>
             </div>
-            <LogOut size={18} onClick={handleLogout} className="text-gray-400 group-hover:text-red-500 transition-colors" />
+            <button type="button" onClick={handleLogout} aria-label="Sign out" className="p-1 text-gray-400 hover:text-red-500 transition-colors">
+              <LogOut size={18} />
+            </button>
           </div>
         </div>
       </aside>
@@ -102,8 +105,13 @@ const TrainerLayout = () => {
               </div>
               <span className="font-display font-bold text-gray-900 text-lg">GYMTRACE</span>
           </div>
-          <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center border border-emerald-200">
-             <span className="text-xs font-bold text-emerald-700">{initials}</span>
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center border border-emerald-200">
+               <span className="text-xs font-bold text-emerald-700">{initials}</span>
+            </div>
+            <button type="button" onClick={handleLogout} aria-label="Sign out" className="p-2 text-gray-400 hover:text-red-500 transition-colors">
+              <LogOut size={20} />
+            </button>
           </div>
         </div>
 

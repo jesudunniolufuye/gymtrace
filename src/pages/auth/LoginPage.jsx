@@ -148,7 +148,7 @@ const LoginPage = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
           {/* Email Input */}
           <div>
-            <label className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
+            <label htmlFor="auth-email" className="block text-sm font-semibold text-slate-700 mb-2">Email Address</label>
             <div className="relative">
               <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
               <input
@@ -157,7 +157,7 @@ const LoginPage = () => {
                 className={`w-full bg-slate-50 border rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.email ? 'border-red-500' : 'border-slate-200'
                 }`}
-                {...register('email')}
+                id="auth-email" {...register('email')}
               />
             </div>
             {errors.email && (
@@ -168,7 +168,7 @@ const LoginPage = () => {
           {/* Password Input */}
           <div>
             <div className="flex justify-between mb-2">
-              <label className="text-sm font-semibold text-slate-700">Password</label>
+              <label htmlFor="auth-password" className="text-sm font-semibold text-slate-700">Password</label>
               <Link to="/forgot-password" className="text-sm text-emerald-600 font-bold hover:underline">
                 Forgot password?
               </Link>
@@ -181,7 +181,7 @@ const LoginPage = () => {
                 className={`w-full bg-slate-50 border rounded-xl py-3 pl-12 pr-4 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all outline-none ${
                     errors.password ? 'border-red-500' : 'border-slate-200'
                 }`}
-                {...register('password')}
+                id="auth-password" {...register('password')}
               />
             </div>
             {errors.password && (
