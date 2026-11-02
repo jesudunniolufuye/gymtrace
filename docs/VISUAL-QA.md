@@ -61,4 +61,8 @@ Each fix has a source-level regression test in `tests/unit/visualqa.test.mjs` (n
 
 ## Release checks
 
-Filled in when the change was released (see below).
+- **Automated:** lint 0 errors (the same 5 old warnings), build passes, 114 unit tests and 100 emulator tests pass.
+- **Staging smoke:** 28 of 28 checks pass.
+- **Staging visual check:** the fixed pages were captured on the deployed staging site with three throwaway accounts (admin, member, trainer; deleted afterwards) at all five sizes: public landing, register and admin login; admin dashboard and trainers; member profile, dashboard, payments and the log-workout modal; trainer sessions (empty). No page scrolls sideways at any size, and each fix looks the same on staging as on the local build.
+- **Not repeated on staging:** the other 240 combinations (see "Not checked").
+- **Machine clock:** while running the smoke test the development machine's clock was about 54 minutes ahead of real time, so Google rejected the service-account token. The smoke script was run with a temporary time offset for that one process; no system settings were changed.
