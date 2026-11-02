@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom';
 
 const HeroSection = () => {
   return (
-    <section id="home" className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden bg-background-light">
+    <section id="home" className="relative pt-32 pb-20 lg:pt-20 lg:pb-8 lg:min-h-svh lg:flex lg:items-center overflow-hidden bg-background-light">
       <div className="absolute inset-0 z-0">
         <div className="absolute -top-24 -right-24 bg-primary/10 w-96 h-96 rounded-full blur-3xl"></div>
         <div className="absolute bottom-0 left-0 bg-blue-100/30 w-full h-1/2 -skew-y-3 pointer-events-none"></div>
       </div>
 
-      <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+      <div className="container mx-auto w-full max-w-6xl px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
           <div className="text-center lg:text-left">
             <p className="inline-block mb-5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-semibold">
@@ -38,18 +38,18 @@ const HeroSection = () => {
             </div>
           </div>
 
-          <div className="relative flex flex-col items-center lg:items-end">
+          <div className="relative flex flex-col items-center">
              {/* Phone Mockup using divs */}
-            <div className="relative mx-auto border-gray-900 bg-gray-900 border-[14px] rounded-[2.5rem] h-[600px] w-[300px] shadow-xl">
+            <div className="relative mx-auto border-gray-900 bg-gray-900 border-[14px] rounded-[2.5rem] h-[600px] lg:h-[min(600px,calc(100svh-16rem))] w-[300px] shadow-xl">
               <div className="w-[148px] h-[18px] bg-gray-900 top-0 rounded-b-[1rem] left-1/2 -translate-x-1/2 absolute z-20"></div>
               <div className="h-[46px] w-[3px] bg-gray-900 absolute -left-[17px] top-[124px] rounded-l-lg"></div>
               <div className="h-[46px] w-[3px] bg-gray-900 absolute -left-[17px] top-[178px] rounded-l-lg"></div>
               <div className="h-[64px] w-[3px] bg-gray-900 absolute -right-[17px] top-[142px] rounded-r-lg"></div>
-              <div className="rounded-[2rem] overflow-hidden w-[272px] h-[572px] bg-white relative z-10">
+              <div className="rounded-[2rem] overflow-hidden w-full h-full bg-white relative z-10">
                   {/* Screen Content */}
                   <div className="flex flex-col h-full bg-background-light">
                     {/* Fake Header/Status Bar */}
-                    <div className="h-24 bg-primary rounded-b-[2rem] pt-8 px-6 pb-6 shadow-md relative z-10">
+                    <div className="shrink-0 bg-primary rounded-b-[2rem] pt-8 px-6 pb-6 shadow-md relative z-10">
                         <div className="flex justify-between items-center text-white mb-4">
                             <div className="flex items-center gap-2">
                                 <img src="/logo.png" alt="GYMTRACE" className="w-6 h-6 brightness-200" />
@@ -109,7 +109,7 @@ const HeroSection = () => {
                   </div>
               </div>
             </div>
-            <p className="mt-3 text-xs text-gray-400">Illustration with example data</p>
+            <p className="mt-4 text-center text-xs text-gray-500">Illustration with example data</p>
           </div>
         </div>
       </div>
