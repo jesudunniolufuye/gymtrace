@@ -31,6 +31,12 @@ describe('reviewer guide: /guide page, docs/REVIEWER-GUIDE.md and footer stay in
   });
 });
 
+describe('guide has no "Where to read more" section', () => {
+  test('removed from both the page and the markdown guide', () => {
+    for (const f of ['docs/REVIEWER-GUIDE.md', 'src/pages/public/GuidePage.jsx']) assert.doesNotMatch(read(f), /where to read more/i, f);
+  });
+});
+
 describe('reviewer emails and mailbox independence', () => {
   const guideFiles = ['docs/REVIEWER-GUIDE.md', 'src/pages/public/GuidePage.jsx'];
   test('docs, guide page and seed notes name the molufuye420 addresses, not the jolufuye mailbox', () => {

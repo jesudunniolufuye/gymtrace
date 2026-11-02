@@ -138,14 +138,6 @@ const GuidePage = () => (
           {LIMITS.map((l) => <li key={l}>{l}</li>)}
         </ul>
       </section>
-
-      <section className="space-y-2 text-sm text-slate-600 leading-relaxed">
-        <h2 className="text-xl font-bold text-slate-900">Where to read more</h2>
-        <p>
-          The project report that came with this link covers what was built, how it was tested, the security findings and
-          the known limits. Ask the developer if you don't have it.
-        </p>
-      </section>
     </main>
   </div>
 );

@@ -62,7 +62,3 @@ Allow about 10 minutes. You can use one browser for steps (a), (b), (d) and (e),
 - **Verification emails** come from a default sender, so they may land in spam.
 - **QR codes** are valid for 60 seconds and work once. A live code could still be shown to someone else within that minute; staff are told to check the name on screen.
 - **Demo data** is reset on the morning of a demo; the accounts above are demo accounts.
-
-## Where to read more
-
-- The project report that came with this link: what was built, how it was tested, the security findings and the known limits. Ask the developer if you don't have it.
