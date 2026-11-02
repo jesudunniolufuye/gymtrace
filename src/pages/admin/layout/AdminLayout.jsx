@@ -41,7 +41,7 @@ const AdminLayout = () => {
         {/* Logo Section */}
         <div className="h-20 flex items-center gap-3 px-6 border-b border-slate-800">
            <div className="w-10 h-10 bg-emerald-500/10 rounded-xl flex items-center justify-center p-2 border border-emerald-500/20">
-            <img src={logo} alt="Logo" className="w-full h-full object-contain brightness-0 invert" />
+            <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-md" />
           </div>
           <div className="flex flex-col">
             <h1 className="font-display font-bold text-white text-xl leading-none tracking-tight">GYM<span className="text-emerald-500">TRACE</span></h1>
@@ -91,7 +91,7 @@ const AdminLayout = () => {
          <header className="md:hidden bg-slate-900 border-b border-slate-800 text-white h-16 flex items-center justify-between px-4 z-10">
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 bg-emerald-500/10 rounded-lg flex items-center justify-center p-1.5 border border-emerald-500/20">
-                <img src={logo} alt="Logo" className="w-full h-full object-contain brightness-0 invert" />
+                <img src={logo} alt="Logo" className="w-full h-full object-contain rounded-md" />
               </div>
               <h1 className="font-display font-bold text-lg leading-none tracking-tight">GYM<span className="text-emerald-500">TRACE</span></h1>
             </div>
@@ -125,7 +125,7 @@ const AdminLayout = () => {
               key={item.path}
               to={item.path}
               className={`
-                flex flex-col items-center justify-center p-1 rounded-xl min-w-[50px] transition-colors
+                flex flex-col items-center justify-center px-0 py-1 rounded-xl flex-1 min-w-0 transition-colors
                 ${isActive ? 'text-emerald-600' : 'text-slate-400 hover:text-slate-600'}
               `}
             >
@@ -135,7 +135,7 @@ const AdminLayout = () => {
               `}>
                 <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
               </div>
-              <span className={`text-[10px] font-medium text-center leading-tight truncate w-full ${isActive ? 'font-bold' : ''}`}>
+              <span className={`text-[10px] font-medium text-center leading-tight tracking-tight truncate w-full ${isActive ? 'font-bold' : ''}`}>
                 {mobileLabel}
               </span>
             </NavLink>

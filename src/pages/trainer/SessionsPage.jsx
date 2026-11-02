@@ -183,7 +183,7 @@ const SessionsPage = () => {
               ) : (
                 <tr>
                   <td colSpan="5" className="py-12 text-center text-gray-500">
-                    No {activeTab} sessions found.
+                    <div className="sticky left-4 w-[min(20rem,calc(100vw-5rem))] md:static md:w-auto">No {activeTab} sessions found.</div>
                   </td>
                 </tr>
               )}

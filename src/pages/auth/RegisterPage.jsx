@@ -216,11 +216,11 @@ const RegisterPage = () => {
 
           {/* TERMS CHECKBOX */}
           <div>
-            <div className="flex items-center space-x-3">
+            <div className="flex items-start space-x-3">
                 <input 
                 type="checkbox" 
                 id="terms"
-                className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
+                className="w-5 h-5 shrink-0 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
                 {...register('terms')}
                 />
                 <label htmlFor="terms" className="text-sm text-slate-600 cursor-pointer">

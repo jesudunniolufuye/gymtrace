@@ -384,10 +384,10 @@ const PaymentHistory = ({ rows, state }) => (
             <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">Loading payments…</td></tr>
           )}
           {state === 'error' && (
-            <tr><td colSpan="6" className="px-6 py-8 text-center text-red-600">Could not load your payment history. Refresh to try again.</td></tr>
+            <tr><td colSpan="6" className="px-6 py-8 text-center text-red-600"><div className="sticky left-4 w-[min(20rem,calc(100vw-5rem))] md:static md:w-auto">Could not load your payment history. Refresh to try again.</div></td></tr>
           )}
           {state === 'ready' && rows.length === 0 && (
-            <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500">No payments yet.</td></tr>
+            <tr><td colSpan="6" className="px-6 py-8 text-center text-gray-500"><div className="sticky left-4 w-[min(20rem,calc(100vw-5rem))] md:static md:w-auto">No payments yet.</div></td></tr>
           )}
           {state === 'ready' &&
             rows.map((p) => (

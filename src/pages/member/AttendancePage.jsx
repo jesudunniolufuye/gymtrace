@@ -203,12 +203,14 @@ const AttendancePage = () => {
               ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-12 text-center">
-                    <div className="flex flex-col items-center justify-center text-gray-400">
-                      <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
-                        <History size={32} />
+                    <div className="sticky left-4 w-[min(20rem,calc(100vw-5rem))] md:static md:w-auto">
+                      <div className="flex flex-col items-center justify-center text-gray-400">
+                        <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
+                          <History size={32} />
+                        </div>
+                        <p className="text-lg font-medium text-gray-900">No attendance records found</p>
+                        <p className="text-sm text-gray-500 mt-1">Your check-in history will appear here once you visit the gym.</p>
                       </div>
-                      <p className="text-lg font-medium text-gray-900">No attendance records found</p>
-                      <p className="text-sm text-gray-500 mt-1">Your check-in history will appear here once you visit the gym.</p>
                     </div>
                   </td>
                 </tr>

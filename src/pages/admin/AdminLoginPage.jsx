@@ -65,7 +65,7 @@ const AdminLoginPage = () => {
       <div className="z-10 w-full max-w-md">
         <div className="flex justify-center mb-8">
             <div className="bg-white/5 backdrop-blur-sm p-4 rounded-2xl border border-white/10 shadow-2xl">
-                <img src={logo} alt="GymTrace Logo" className="w-auto h-16 object-contain brightness-0 invert" />
+                <img src={logo} alt="GymTrace Logo" className="w-auto h-16 object-contain rounded-xl" />
             </div>
         </div>
 
