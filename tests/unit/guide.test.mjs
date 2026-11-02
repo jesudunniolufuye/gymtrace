@@ -7,7 +7,7 @@ const read = (p) => readFileSync(new URL(`../../${p}`, import.meta.url), 'utf8')
 describe('reviewer guide: /guide page, docs/REVIEWER-GUIDE.md and footer stay in step', () => {
   const page = read('src/pages/public/GuidePage.jsx');
   const doc = read('docs/REVIEWER-GUIDE.md');
-  const emails = ['jolufuye@gmail.com', 'jolufuye+demomember@gmail.com', 'jolufuye+demotrainer@gmail.com'];
+  const emails = ['molufuye420+reviewer@gmail.com', 'molufuye420+demomember@gmail.com', 'molufuye420+demotrainer@gmail.com'];
 
   test('the three logins appear in both the page and the markdown guide', () => {
     for (const e of emails) {
@@ -31,11 +31,27 @@ describe('reviewer guide: /guide page, docs/REVIEWER-GUIDE.md and footer stay in
   });
 });
 
-describe('no stale reviewer emails (the old +alias addresses were replaced)', () => {
-  test('docs, guide page and seed notes name the current reviewer mailbox only', () => {
-    for (const f of ['docs/REVIEWER-GUIDE.md', 'docs/DEMO-SCRIPT.md', 'src/pages/public/GuidePage.jsx', 'scripts/seed-demo.mjs']) {
-      assert.doesNotMatch(read(f), /molufuye420\+(reviewer|demomember|demotrainer)@/, f);
+describe('reviewer emails and mailbox independence', () => {
+  const guideFiles = ['docs/REVIEWER-GUIDE.md', 'src/pages/public/GuidePage.jsx'];
+  test('docs, guide page and seed notes name the molufuye420 addresses, not the jolufuye mailbox', () => {
+    for (const f of [...guideFiles, 'docs/DEMO-SCRIPT.md', 'scripts/seed-demo.mjs']) {
+      assert.doesNotMatch(read(f), /jolufuye/, f);
     }
+  });
+  test('the reviewer guide never needs the developer\'s mailbox: no Forgot password, no reset emails', () => {
+    for (const f of guideFiles) {
+      const src = read(f).replace(/^\s*\/\/.*$/gm, '');
+      assert.doesNotMatch(src, /forgot|password reset|reset (email|link)|set a password/i, f);
+      assert.match(src, /credentials you were sent/, f);
+    }
+  });
+  test('the register step says the verification email goes to the tester\'s own address', () => {
+    for (const f of guideFiles) assert.match(read(f), /your own email address/, f);
+    for (const f of guideFiles) assert.match(read(f), /not to the developer/, f);
+  });
+  test('the landing page tells visitors to do nothing that needs the developer\'s mailbox', () => {
+    const landing = ['HeroSection', 'FeaturesSection', 'CTASection', 'Navbar'].map((c) => read(`src/pages/public/components/${c}.jsx`)).join('\n');
+    assert.doesNotMatch(landing, /forgot password|check your inbox|spam/i);
   });
 });
 

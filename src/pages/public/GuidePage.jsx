@@ -5,9 +5,9 @@ import logo from '../../assets/logo.png';
 
 // Public reviewer guide. Mirrors docs/REVIEWER-GUIDE.md: keep the two in step.
 const LOGINS = [
-  { role: 'Admin (front desk)', email: 'jolufuye@gmail.com', href: '/admin/login' },
-  { role: 'Member (Tolu Martins)', email: 'jolufuye+demomember@gmail.com', href: '/login' },
-  { role: 'Trainer (Bisi Lawal)', email: 'jolufuye+demotrainer@gmail.com', href: '/login' },
+  { role: 'Admin (front desk)', email: 'molufuye420+reviewer@gmail.com', href: '/admin/login' },
+  { role: 'Member (Tolu Martins)', email: 'molufuye420+demomember@gmail.com', href: '/login' },
+  { role: 'Trainer (Bisi Lawal)', email: 'molufuye420+demotrainer@gmail.com', href: '/login' },
 ];
 
 const STEPS = [
@@ -44,7 +44,7 @@ const STEPS = [
     minutes: 2,
     items: [
       'With a camera: in a second browser, sign in as admin, open Check-in Scanner, allow the camera and hold the phone to it. Expect "Access Granted". Scan the same code again: "This QR code has already been used".',
-      'Without a camera: on the scanner page, type jolufuye+demomember@gmail.com into manual check-in. Expect "Access Granted".',
+      'Without a camera: on the scanner page, type molufuye420+demomember@gmail.com into manual check-in. Expect "Access Granted".',
       'Try daniel.okoro@example.edu: "Monthly membership has expired."',
     ],
   },
@@ -61,8 +61,8 @@ const STEPS = [
     title: '(f) Register a brand-new account',
     minutes: 1,
     items: [
-      'Open Register with any email address you control.',
-      'You are asked to check your inbox for a verification link. Look in spam too.',
+      'Open Register and use your own email address.',
+      'The verification email goes to whatever address you registered with, not to the developer. If it does not arrive, check spam: it comes from a default sender.',
       'Until you click the link the account cannot sign in. Trainers also need admin approval before they can take bookings.',
     ],
   },
@@ -73,7 +73,7 @@ const LIMITS = [
   'A recorded payment cannot be voided in the app.',
   'All staff are full admins. There is no separate attendant role.',
   'The privacy notice uses example details and has not been reviewed by a lawyer.',
-  'Verification and reset emails land in spam.',
+  'Verification emails come from a default sender, so they may land in spam.',
   'A QR code is valid for 60 seconds and works once. A live code could still be shown to someone else within that minute; staff check the name on screen.',
   'Demo data is reset before demonstrations.',
 ];
@@ -100,9 +100,8 @@ const GuidePage = () => (
           front-desk staff. It uses demo data. No real money moves and no real person's data is held.
         </p>
         <p className="text-slate-600 leading-relaxed">
-          Set a password for each account with <strong>Forgot password</strong> on the login page.
-          <br />
-          <span className="text-amber-700 font-medium">Emails land in spam. Check the spam folder first.</span>
+          Log in with the credentials you were sent: admin at <code>/admin/login</code>, member and trainer at{' '}
+          <code>/login</code>. The passwords were sent to you separately.
         </p>
       </section>
 
@@ -116,9 +115,6 @@ const GuidePage = () => (
             </div>
           ))}
         </div>
-        <p className="text-sm text-slate-500">
-          Admin sign-in: <code>/admin/login</code>. Member and trainer sign-in: <code>/login</code>.
-        </p>
       </section>
 
       <section className="space-y-4">

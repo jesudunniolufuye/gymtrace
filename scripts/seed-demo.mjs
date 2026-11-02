@@ -9,8 +9,8 @@
 //   - Optional DEMO_MEMBER_EMAIL / DEMO_TRAINER_EMAIL create one member and
 //     one trainer you can log in as (set their password with Forgot password).
 //     Accounts are matched by email, so always pass the SAME emails the
-//     existing demo log-ins use (production: jolufuye+demomember@gmail.com and
-//     jolufuye+demotrainer@gmail.com); a different email creates a duplicate.
+//     existing demo log-ins use (production: molufuye420+demomember@gmail.com and
+//     molufuye420+demotrainer@gmail.com); a different email creates a duplicate.
 //   - Plan expiry is computed with the app's own purchase rules
 //     (shared/subscription.js), so demo data obeys the same logic.
 //   - Document ids are fixed, so re-running overwrites instead of duplicating.
