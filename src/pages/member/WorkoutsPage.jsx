@@ -16,6 +16,7 @@ import {
 import { toast } from 'sonner';
 import { useAuth } from '../../context/AuthContext';
 import { logWorkout, getWorkoutsByMember, getWorkoutsForWeek, deleteWorkout } from '../../services/workoutService';
+import { localDateString } from '../../lib/display';
 
 const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -26,9 +27,8 @@ function startOfWeek(d) {
   copy.setDate(copy.getDate() - diff);
   return copy;
 }
-function fmtDate(d) {
-  return d.toISOString().slice(0, 10);
-}
+// The member's own calendar day (toISOString() would give the UTC day).
+const fmtDate = localDateString;
 
 const WorkoutsPage = () => {
   const { user } = useAuth();
@@ -111,9 +111,10 @@ const WorkoutsPage = () => {
     try {
       await logWorkout({
         memberId: user.uid,
-        title: form.title,
-        duration: form.duration || '45 mins',
-        calories: form.calories || '0 kcal',
+        title: form.title.trim(),
+        // Blank stays blank: don't record a duration or calories the member never entered.
+        duration: form.duration.trim() || '—',
+        calories: form.calories.trim() || '—',
         difficulty: form.difficulty,
         date: todayStr,
         exercises: form.exercises.filter((e) => e.name.trim()),
@@ -400,6 +401,7 @@ const WorkoutsPage = () => {
                 <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wider mb-1">Title *</label>
                 <input
                   value={form.title}
+                  maxLength={100}
                   onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
                   placeholder="e.g. Upper Body Power"
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500"

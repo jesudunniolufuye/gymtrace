@@ -4,6 +4,7 @@ import { toast } from 'sonner';
 import { getAllTrainers, updateTrainer } from '../../services/trainerService';
 import AccountStatusModal from './components/AccountStatusModal';
 import { initialsOf } from '../../lib/display';
+import { validateName } from '../../../shared/name.js';
 
 // Trainer status (set by the gym): 'active' = approved for booking,
 // 'inactive' = not approved (new trainers start here), 'disabled' = account
@@ -52,10 +53,15 @@ const TrainersPage = () => {
 
   const handleEditSave = async () => {
     if (!editModal) return;
+    const name = validateName(editModal.name);
+    if (!name.ok) {
+      toast.error(name.message);
+      return;
+    }
     setSaving(true);
     try {
       await updateTrainer(editModal.uid, {
-        name: editModal.name,
+        name: name.value,
         phone: editModal.phone,
         specialty: editModal.specialty,
       });

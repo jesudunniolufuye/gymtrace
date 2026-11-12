@@ -6,6 +6,7 @@ import RecordPaymentModal from './components/RecordPaymentModal';
 import AccountStatusModal from './components/AccountStatusModal';
 import { PLANS, formatDate as formatLagosDate, getSubscriptionStatus } from '../../lib/subscription';
 import { initialsOf } from '../../lib/display';
+import { validateName } from '../../../shared/name.js';
 
 /** FR18: each member's real plan, from the server-written subscription. */
 const PlanBadge = ({ subscription, now }) => {
@@ -82,10 +83,15 @@ const MembersPage = () => {
 
   const handleEditSave = async () => {
     if (!editModal) return;
+    const name = validateName(editModal.name);
+    if (!name.ok) {
+      toast.error(name.message);
+      return;
+    }
     setSaving(true);
     try {
       await updateMember(editModal.uid, {
-        name: editModal.name,
+        name: name.value,
         phone: editModal.phone,
       });
       toast.success('Member updated');

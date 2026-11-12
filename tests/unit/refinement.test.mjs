@@ -127,3 +127,21 @@ describe('pages say so when their data fails to load, instead of showing zeros',
     assert.match(read('src/pages/trainer/TrainerDashboard.jsx'), /today\.filter\(\(s\) => s\.status !== 'cancelled'\)/);
   });
 });
+
+describe('workout log', () => {
+  const src = read('src/pages/member/WorkoutsPage.jsx');
+  test('uses the member\'s own calendar day, not the UTC day', () => {
+    assert.doesNotMatch(src, /toISOString\(\)\.slice\(0, 10\)/);
+    assert.match(src, /const fmtDate = localDateString/);
+  });
+  test('does not invent a duration or calories the member left blank', () => {
+    assert.doesNotMatch(src, /'45 mins'|'0 kcal'/);
+  });
+  test('title is limited to what the database accepts (100 characters)', () => assert.match(src, /maxLength=\{100\}/));
+});
+
+describe('staff cannot save a blank or over-long name when editing a member or trainer', () => {
+  for (const f of ['admin/MembersPage', 'admin/TrainersPage']) {
+    test(f, () => assert.match(read(`src/pages/${f}.jsx`), /const name = validateName\(editModal\.name\)/));
+  }
+});
