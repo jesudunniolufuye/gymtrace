@@ -1,11 +1,12 @@
 import React from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Calendar, 
   Users, 
   ClipboardList, 
   LogOut,
+  CircleHelp,
   Settings
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
@@ -77,6 +78,13 @@ const TrainerLayout = () => {
         </nav>
 
         {/* Bottom Section - Trainer Profile */}
+        <div className="px-4 pb-3">
+          <Link to="/help" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+            <CircleHelp size={20} />
+            Help
+          </Link>
+        </div>
+
         <div className="p-4 border-t border-gray-100">
           <div className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-all group">
             <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-700 font-bold text-sm border-2 border-white shadow-sm">
@@ -105,7 +113,10 @@ const TrainerLayout = () => {
               </div>
               <span className="font-display font-bold text-gray-900 text-lg">GYMTRACE</span>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
+            <Link to="/help" aria-label="Help" className="p-2 text-gray-400 hover:text-gray-700 transition-colors">
+              <CircleHelp size={20} />
+            </Link>
             <div className="w-8 h-8 bg-emerald-100 rounded-full flex items-center justify-center border border-emerald-200">
                <span className="text-xs font-bold text-emerald-700">{initials}</span>
             </div>

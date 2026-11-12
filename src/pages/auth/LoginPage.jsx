@@ -231,6 +231,7 @@ const LoginPage = () => {
 
       {/* 3. Footer */}
       <div className="mt-12 text-center text-xs text-slate-400 font-medium">
+        <p className="mb-2 text-sm"><Link to="/help" className="text-emerald-700 font-semibold hover:underline">Need help?</Link></p>
         <p> Secure Access Portal • Babcock University Gym Management</p>
         <p className="mt-2 uppercase tracking-widest">© 2026 GYMTRACE PLATFORM</p>
       </div>

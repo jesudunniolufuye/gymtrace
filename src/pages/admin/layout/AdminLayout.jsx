@@ -1,5 +1,5 @@
 import React from 'react';
-import { Outlet, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import { Outlet, NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Users, 
@@ -8,7 +8,8 @@ import {
   Settings, 
   LogOut,
   ScanLine,
-  Banknote
+  Banknote,
+  CircleHelp
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { logoutUser } from '../../../services/authService';
@@ -75,6 +76,10 @@ const AdminLayout = () => {
 
         {/* Footer */}
         <div className="p-4 border-t border-slate-800">
+          <Link to="/help" className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-slate-400 hover:bg-slate-800 hover:text-white transition-all">
+            <CircleHelp size={20} />
+            <span>Help</span>
+          </Link>
           <button 
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-red-400 hover:bg-red-500/10 transition-all group"
@@ -95,13 +100,18 @@ const AdminLayout = () => {
               </div>
               <h1 className="font-display font-bold text-lg leading-none tracking-tight">GYM<span className="text-emerald-500">TRACE</span></h1>
             </div>
-            <button 
-              onClick={handleLogout}
-              aria-label="Sign out"
-              className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-            >
-              <LogOut size={20} />
-            </button>
+            <div className="flex items-center gap-1">
+              <Link to="/help" aria-label="Help" className="p-2 text-slate-400 hover:text-white rounded-lg transition-colors">
+                <CircleHelp size={20} />
+              </Link>
+              <button 
+                onClick={handleLogout}
+                aria-label="Sign out"
+                className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
+              >
+                <LogOut size={20} />
+              </button>
+            </div>
          </header>
 
          {/* Main scrollable area */}

@@ -11,7 +11,8 @@ import {
   MoreVertical,
   ChevronRight,
   Menu,
-  X
+  X,
+  CircleHelp
 } from 'lucide-react';
 import { useAuth } from '../../../context/AuthContext';
 import { logoutUser } from '../../../services/authService';
@@ -83,6 +84,13 @@ const MemberLayout = () => {
           })}
         </nav>
 
+        <div className="px-4 pb-3">
+          <Link to="/help" className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition-all">
+            <CircleHelp size={20} />
+            Help
+          </Link>
+        </div>
+
         {/* Bottom Section - User Profile */}
         <div className="p-4 border-t border-gray-100">
           <Link to="/member/profile" className="flex items-center gap-3 p-2 rounded-xl hover:bg-gray-50 cursor-pointer transition-all group">
@@ -119,8 +127,14 @@ const MemberLayout = () => {
               </div>
               <span className="font-display font-bold text-gray-900 text-lg">GYMTRACE</span>
           </div>
-          <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
-             <span className="text-xs font-bold text-gray-600">{initials}</span>
+          <div className="flex items-center gap-1">
+            <Link to="/help" aria-label="Help" className="p-2 text-gray-400 hover:text-gray-700 transition-colors">
+              <CircleHelp size={20} />
+            </Link>
+            {/* The sidebar (with the profile link) is hidden on phones, so this is the way to My Profile and Sign Out. */}
+            <Link to="/member/profile" aria-label="My profile" className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+               <span className="text-xs font-bold text-gray-600">{initials}</span>
+            </Link>
           </div>
         </div>
 

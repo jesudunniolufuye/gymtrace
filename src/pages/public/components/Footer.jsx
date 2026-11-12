@@ -31,6 +31,7 @@ const Footer = () => {
             <h4 className="text-white font-semibold mb-4 uppercase text-sm tracking-wider">About</h4>
             <ul className="space-y-2">
               <li><a href="/#features" className="hover:text-white transition-colors">What it does</a></li>
+              <li><Link to="/help" className="hover:text-white transition-colors">Help and user manual</Link></li>
               <li><Link to="/privacy" className="hover:text-white transition-colors">Privacy notice</Link></li>
             </ul>
           </div>
