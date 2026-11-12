@@ -13,7 +13,7 @@
   - QR entry codes could be forged
   - the check-in scanner never checked payment
 - I kept the existing UI (React/Vite/Firebase) and added a small server layer (Vercel functions) for payments, QR codes, check-in and account management. I rewrote the database rules, and fixed or removed most of the mocked features. A QA pass (`docs/QA-FINDINGS.md`) found leftovers on the member profile page and sidebar (a hardcoded "Premium" plan and expiry); those are now fixed.
-- The result runs in two environments, staging and production. It's covered by 155 automated tests plus an end-to-end smoke script that runs against staging. Production holds realistic demo data.
+- The result runs in two environments, staging and production. It's covered by 280 automated tests plus an end-to-end smoke script that runs against staging. Production holds realistic demo data.
 
 ---
 
@@ -155,9 +155,9 @@ server-side profile, never from the request.
 
 | Suite | Count | What it covers | Command |
 |---|---|---|---|
-| Unit | 55 | Plan and expiry rules (incl. Lagos midnight), card validation, QR signing (tamper, expiry, wrong secret, malformed), plan summary text, QR refresh decisions, name validation | `npm run test:unit` |
+| Unit | 177 | Plan and expiry rules (incl. Lagos midnight), card validation, QR signing (tamper, expiry, wrong secret, malformed), plan summary text, QR refresh decisions, name validation | `npm run test:unit` |
 | Firestore rules | 45 | Who can read and write what, on the emulator | `npm test` |
-| API | 55 | Each endpoint against the Auth + Firestore emulators with real ID tokens: auth, roles, validation, idempotency, plan rules, replay, revocation, deactivation | `npm test` |
+| API | 58 | Each endpoint against the Auth + Firestore emulators with real ID tokens: auth, roles, validation, idempotency, plan rules, replay, revocation, deactivation | `npm test` |
 | Smoke (end to end) | 28 checks on staging (29 with the simulator off) | The daily loop over real HTTP with the browser SDK, so rules apply: register → verify → admin records payment → receipt/history → QR → check-in → replay refused → deactivate/reactivate → booking/availability/cancel | `npm run smoke` (see the script header for staging) |
 
 **The rules tests catch the original holes.** Running the same 45 rules tests against the original `firestore.rules` (`npm run test:old-rules`): **28 fail**. These are security failures:
@@ -198,11 +198,8 @@ NFRs: HTTPS, Firebase-managed credentials and sessions, server-side validation, 
 - **Admins can write some profile fields directly (QA F3).** The rules let an admin account update any field on a user profile, including `subscription`, `role` and `status`, without a payment record. Members and trainers cannot. The payments collection is protected from everyone, but a stolen or misused admin session could grant a plan with no audit trail. Tightening this so only the server changes those fields is a next step; the rules were deliberately not changed in the QA fix batch.
 - **Found by the QA pass and not fixed** (details and repro steps in `docs/QA-FINDINGS.md`):
   - F5/F6: booking and workout rules don't validate content (past or junk dates, very large strings); the checks are UI-only. No money or access impact.
-  - F10: two admins can deactivate each other and lock everyone out; recovery needs the developer.
-  - F12: attendance records stay "Active" unless the member checks out.
   - F8, F9: long names stretch admin tables; the Members table needs sideways scrolling on a phone.
   - F13: members can read trainers' email and phone.
-  - F14: reusing an idempotency key with a different body returns the first payment.
   - F15, F16: a monthly plan bought after a day pass loses the day pass; a late-bought day pass is worth only the time until midnight.
   - Also remaining from F7: the rules still accept a two-space profile name (the app now refuses it).
 - **No way to void a recorded payment** in the app. Staff must note the receipt number and tell a manager.

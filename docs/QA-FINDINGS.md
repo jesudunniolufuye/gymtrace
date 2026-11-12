@@ -12,7 +12,9 @@
 | F3 | **Documented** in README, PROJECT-REPORT, QA-PREP; rules unchanged, tightening is a next step. |
 | F11, D1, D2, D3 | **Docs updated** (`staff-guide.md`, `DEMO-SCRIPT.md`). |
 | D4 | Still a to-do for the user (set the demo passwords). |
-| F5, F6, F8-F10, F12-F17 | **Not fixed**; listed under known limits in `PROJECT-REPORT.md` §6. |
+| F10, F12, F14 | **Fixed later** (12 Nov): simultaneous mutual deactivation is refused; a visit left "Active" from an earlier day shows "Not checked out"; a reused payment key with different details returns 409. |
+| F8 | **Fixed** in the refinement pass. |
+| F5, F6, F9, F13, F15-F17 | **Not fixed**; listed under known limits in `PROJECT-REPORT.md` §6. |
 
 ## Summary
 
