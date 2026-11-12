@@ -4,10 +4,11 @@ import {
   MapPin, 
   CheckCircle, 
   Search,
-  Filter,
-  ArrowUpDown,
   History
 } from 'lucide-react';
+import { toast } from 'sonner';
+import { visitStatus } from '../../lib/display';
+import { startOfGymDay } from '../../lib/subscription';
 import { useAuth } from '../../context/AuthContext';
 import { getAttendanceByMember, recordCheckOut } from '../../services/attendanceService';
 
@@ -15,13 +16,14 @@ const AttendancePage = () => {
   const { user } = useAuth();
   const [attendanceHistory, setAttendanceHistory] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState('');
 
   const fetch = async () => {
     try {
       const records = await getAttendanceByMember(user.uid);
       setAttendanceHistory(records);
     } catch (error) { console.error(error);
-      // silent
+      toast.error('Could not load your attendance. Check your connection and reload.');
     } finally {
       setLoading(false);
     }
@@ -35,9 +37,11 @@ const AttendancePage = () => {
   const handleCheckOut = async (id) => {
     try {
       await recordCheckOut(id);
+      toast.success('Checked out');
       await fetch();
     } catch (err) {
       console.error("Failed to check out", err);
+      toast.error('Could not check you out. Please try again.');
     }
   };
 
@@ -49,6 +53,10 @@ const AttendancePage = () => {
     return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
   }).length;
 
+  // A visit left "Active" on an earlier day was never checked out; say so instead.
+  const startOfToday = startOfGymDay(Date.now());
+  const withStatus = attendanceHistory.map((r) => ({ ...r, shownStatus: visitStatus(r, startOfToday) }));
+
   const formatTime = (ts) => {
     if (!ts?.toDate) return '—';
     return ts.toDate().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
@@ -57,6 +65,11 @@ const AttendancePage = () => {
     if (!ts?.toDate) return '—';
     return ts.toDate().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   };
+
+  const needle = search.trim().toLowerCase();
+  const visibleHistory = needle
+    ? withStatus.filter((r) => `${formatDate(r.checkIn)} ${formatTime(r.checkIn)} ${r.shownStatus}`.toLowerCase().includes(needle))
+    : withStatus;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -125,7 +138,9 @@ const AttendancePage = () => {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
             <input 
               type="text" 
-              aria-label="Search attendance history" placeholder="Search history..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              aria-label="Search attendance history" placeholder="Search by date or status..." 
               className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent w-full sm:w-64"
             />
           </div>
@@ -137,10 +152,7 @@ const AttendancePage = () => {
             <thead>
               <tr className="bg-gray-50/50 border-b border-gray-100">
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                  <div className="flex items-center gap-2 cursor-pointer hover:text-gray-700">
-                    Date
-                    <ArrowUpDown size={14} />
-                  </div>
+                  Date
                 </th>
                 <th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase tracking-wider">
                   Check-in / Out
@@ -158,8 +170,8 @@ const AttendancePage = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
-              {attendanceHistory.length > 0 ? (
-                attendanceHistory.map((record) => (
+              {visibleHistory.length > 0 ? (
+                visibleHistory.map((record) => (
                   <tr key={record.id} className="hover:bg-gray-50/80 transition-colors">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center gap-3">
@@ -183,13 +195,13 @@ const AttendancePage = () => {
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.status)}`}>
-                        <span className={`w-1.5 h-1.5 rounded-full ${record.status === 'Active' ? 'bg-blue-500 animate-pulse' : 'bg-emerald-500'}`}></span>
-                        {record.status}
+                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(record.shownStatus)}`}>
+                        <span className={`w-1.5 h-1.5 rounded-full ${record.shownStatus === 'Active' ? 'bg-blue-500 animate-pulse' : record.shownStatus === 'Completed' ? 'bg-emerald-500' : 'bg-gray-400'}`}></span>
+                        {record.shownStatus}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right">
-                      {record.status === 'Active' && (
+                      {record.shownStatus === 'Active' && (
                         <button
                           onClick={() => handleCheckOut(record.id)}
                           className="px-3 py-1 bg-emerald-100 text-emerald-700 hover:bg-emerald-200 rounded-md transition-colors text-sm font-medium"
@@ -208,8 +220,8 @@ const AttendancePage = () => {
                         <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center mb-4">
                           <History size={32} />
                         </div>
-                        <p className="text-lg font-medium text-gray-900">No attendance records found</p>
-                        <p className="text-sm text-gray-500 mt-1">Your check-in history will appear here once you visit the gym.</p>
+                        <p className="text-lg font-medium text-gray-900">{needle ? 'No visits match your search' : 'No attendance records found'}</p>
+                        <p className="text-sm text-gray-500 mt-1">{needle ? 'Try a different date or status.' : 'Your check-in history will appear here once you visit the gym.'}</p>
                       </div>
                     </div>
                   </td>
@@ -221,7 +233,7 @@ const AttendancePage = () => {
         
         {/* Pagination */}
         <div className="px-6 py-4 border-t border-gray-100 bg-gray-50/50 flex items-center justify-between">
-          <p className="text-sm text-gray-500">Showing <span className="font-medium">{attendanceHistory.length}</span> results</p>
+          <p className="text-sm text-gray-500">Showing <span className="font-medium">{visibleHistory.length}</span> {visibleHistory.length === 1 ? 'result' : 'results'}</p>
         </div>
       </div>
     </div>

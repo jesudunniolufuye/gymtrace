@@ -80,13 +80,13 @@ const TrainerDashboard = () => {
                     getTrainerBookings(user.uid),
                 ]);
                 setClientCount(clients.length);
-                setTodayCount(today.length);
+                setTodayCount(today.filter((s) => s.status !== 'cancelled').length);
                 setCompletedCount(allSessions.filter((s) => s.status === 'completed').length);
                 setUpcomingSessions(
                     allSessions.filter((s) => s.status === 'upcoming').sort(compareSessionsAsc).slice(0, 5)
                 );
             } catch (error) { console.error(error);
-                // silent
+                toast.error('Could not load your dashboard. Check your connection and reload.');
             } finally {
                 setLoading(false);
             }

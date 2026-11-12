@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { getAllTrainers } from '../../services/trainerService';
 import { createBooking, getBookingsByMember, updateBookingStatus } from '../../services/bookingService';
 import { gymDateString, gymTimeString } from '../../lib/subscription';
-import { formatSessionDate, initialsOf, specialtyOptions } from '../../lib/display';
+import { formatSessionDate, hasSessionAt, initialsOf, specialtyOptions } from '../../lib/display';
 
 const SESSION_TIMES = ['06:00', '07:00', '08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00', '18:00', '19:00', '20:00'];
 
@@ -91,6 +91,10 @@ const BookingPage = () => {
     const today = gymDateString();
     if (bookingDate < today || (bookingDate === today && bookingTime <= gymTimeString())) {
       toast.error('Choose a date and time in the future.');
+      return;
+    }
+    if (hasSessionAt(mySessions, bookingDate, bookingTime)) {
+      toast.error('You already have a session at that date and time.');
       return;
     }
     setSubmitting(true);

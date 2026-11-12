@@ -1,6 +1,8 @@
 // src/pages/trainer/SchedulePage.jsx
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Clock, User, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { localDateString, slotEvents } from '../../lib/display';
 import { useAuth } from '../../context/AuthContext';
 import { getWeekTrainerBookings } from '../../services/bookingService';
 
@@ -32,7 +34,7 @@ const SchedulePage = () => {
   const days = dayNames.map((name, i) => {
     const d = new Date(weekStart);
     d.setDate(weekStart.getDate() + i);
-    return { name, date: d.getDate(), full: d.toISOString().slice(0, 10) };
+    return { name, date: d.getDate(), full: localDateString(d) };
   });
 
   const weekEnd = new Date(weekStart);
@@ -45,12 +47,12 @@ const SchedulePage = () => {
     const load = async () => {
       setLoading(true);
       try {
-        const startStr = weekStart.toISOString().slice(0, 10);
-        const endStr = weekEnd.toISOString().slice(0, 10);
+        const startStr = localDateString(weekStart);
+        const endStr = localDateString(weekEnd);
         const data = await getWeekTrainerBookings(user.uid, startStr, endStr);
         setEvents(data);
       } catch (error) { console.error(error);
-        // silent
+        toast.error('Could not load your schedule. Check your connection and reload.');
       } finally {
         setLoading(false);
       }
@@ -76,11 +78,10 @@ const SchedulePage = () => {
     cancelled: 'bg-red-100 text-red-700 border-red-200',
   };
 
-  const getEventForSlot = (dayFull, time) => {
-    return events.find((e) => e.date === dayFull && e.time === time);
-  };
+  // Several members can book the same slot (no slot locking), so a cell may hold more than one.
+  const getEventsForSlot = (dayFull, time) => slotEvents(events, dayFull, time);
 
-  const todayStr = new Date().toISOString().slice(0, 10);
+  const todayStr = localDateString(new Date());
 
   return (
     <div className="p-6 md:p-8 space-y-8 bg-gray-50 min-h-full">
@@ -132,12 +133,13 @@ const SchedulePage = () => {
                       {time}
                     </div>
                     {days.map((day) => {
-                      const event = getEventForSlot(day.full, time);
+                      const slot = getEventsForSlot(day.full, time);
+                      const event = slot[0];
                       return (
                         <div key={`${day.full}-${time}`} className="border-r border-gray-100 last:border-r-0 p-1 relative group">
                           {event ? (
                             <div className={`absolute inset-1 rounded-lg p-2 text-xs border z-10 ${colorMap[event.status] || colorMap.upcoming}`}>
-                              <div className="font-bold truncate">{event.sessionType || 'Training'}</div>
+                              <div className="font-bold truncate">{event.sessionType || 'Training'}{slot.length > 1 ? ` (+${slot.length - 1} more)` : ''}</div>
                               <div className="flex items-center gap-1 mt-1 opacity-90 truncate">
                                 <User size={10} />
                                 <span>{event.memberName}</span>

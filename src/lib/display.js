@@ -20,3 +20,27 @@ export const specialtyOptions = (trainers) => [
   'All',
   ...[...new Set(trainers.map((t) => (t.specialty || '').trim()).filter(Boolean))].sort((a, b) => a.localeCompare(b)),
 ];
+
+/** A Date's own calendar day as "YYYY-MM-DD" (toISOString() would shift it by the UTC offset). */
+export const localDateString = (date) =>
+  `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+
+/**
+ * What to show for a visit. A visit still marked "Active" from an earlier day
+ * was simply never checked out; calling it Active would be wrong.
+ * `startOfTodayMs` is the start of the gym's current day.
+ */
+export const visitStatus = (record, startOfTodayMs) => {
+  if (record.status !== 'Active') return record.status || 'Completed';
+  const checkInMs = record.checkIn?.toMillis?.() ?? record.checkIn?.toDate?.().getTime?.() ?? null;
+  return checkInMs !== null && checkInMs < startOfTodayMs ? 'Not checked out' : 'Active';
+};
+
+/** The bookings to show in one schedule cell: live ones first, cancelled last. */
+export const slotEvents = (events, date, time) =>
+  events
+    .filter((e) => e.date === date && e.time === time)
+    .sort((a, b) => (a.status === 'cancelled') - (b.status === 'cancelled'));
+
+/** True if the member already has an upcoming session at that date and time. */
+export const hasSessionAt = (sessions, date, time) => sessions.some((s) => s.status === 'upcoming' && s.date === date && s.time === time);

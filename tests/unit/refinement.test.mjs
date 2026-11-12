@@ -108,3 +108,22 @@ describe('actions are not hidden behind mouse hover (invisible on phones and tab
     assert.doesNotMatch(read('src/pages/trainer/SchedulePage.jsx'), /cursor-pointer/);
   });
 });
+
+describe('pages say so when their data fails to load, instead of showing zeros', () => {
+  for (const f of ['admin/AdminDashboard', 'admin/ReportsPage', 'trainer/SchedulePage', 'trainer/TrainerDashboard', 'member/MemberDashboard', 'member/AttendancePage']) {
+    test(f, () => {
+      const src = read(`src/pages/${f}.jsx`);
+      assert.doesNotMatch(src, /\/\/ silent/);
+      assert.match(src, /toast\.error\('Could not load/);
+    });
+  }
+  test('attendance search box is wired up and check-out reports its result', () => {
+    const src = read('src/pages/member/AttendancePage.jsx');
+    assert.match(src, /onChange=\{\(e\) => setSearch\(e\.target\.value\)\}/);
+    assert.match(src, /toast\.error\('Could not check you out/);
+    assert.doesNotMatch(src, /ArrowUpDown/);
+  });
+  test('trainer "sessions today" does not count cancelled sessions', () => {
+    assert.match(read('src/pages/trainer/TrainerDashboard.jsx'), /today\.filter\(\(s\) => s\.status !== 'cancelled'\)/);
+  });
+});

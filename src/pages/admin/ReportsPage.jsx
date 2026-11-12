@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DollarSign, Users, TrendingUp, Calendar, ArrowUpRight, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'sonner';
 import { getAdminStats, getMonthlyGrowth, getWeeklyCheckIns } from '../../services/adminService';
 
 const ReportsPage = () => {
@@ -22,7 +23,7 @@ const ReportsPage = () => {
         setGrowthData(growth);
         setWeeklyData(weekly);
       } catch (error) { console.error(error);
-        // silent
+        toast.error('Could not load the reports. Check your connection and reload.');
       } finally {
         setLoading(false);
       }

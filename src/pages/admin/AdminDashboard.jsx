@@ -9,6 +9,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { toast } from 'sonner';
 import { getAdminStats, getRecentActivity, getMonthlyGrowth, getWeeklyCheckIns } from '../../services/adminService';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
@@ -39,7 +40,7 @@ const AdminDashboard = () => {
         setWeeklyData(weekly);
       } catch (error) {
         console.error(error);
-        // silent
+        toast.error('Could not load the dashboard. Check your connection and reload.');
       } finally {
         setLoading(false);
       }

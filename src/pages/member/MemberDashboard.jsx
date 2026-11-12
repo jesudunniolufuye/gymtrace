@@ -17,7 +17,8 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { useAuth } from '../../context/AuthContext';
 import { getAttendanceByMember, getWeeklyAttendance } from '../../services/attendanceService';
 import { getBookingsByMember } from '../../services/bookingService';
-import { describeSubscription, getSubscriptionStatus, PLANS } from '../../lib/subscription';
+import { toast } from 'sonner';
+import { describeSubscription, getSubscriptionStatus, gymDateString, PLANS } from '../../lib/subscription';
 import { formatSessionDate } from '../../lib/display';
 
 const MemberDashboard = () => {
@@ -89,13 +90,13 @@ const MemberDashboard = () => {
             setLastCheckIn(all[0].checkIn.toDate());
           }
           // Find the nearest upcoming booking
-          const todayStr = new Date().toISOString().slice(0, 10);
+          const todayStr = gymDateString();
           const upcoming = bookings
             .filter((b) => b.status === 'upcoming' && b.date >= todayStr)
             .sort((a, b) => (a.date + a.time).localeCompare(b.date + b.time));
           if (upcoming.length > 0) setNextBooking(upcoming[0]);
         } catch (error) { console.error(error);
-          // silent
+          toast.error('Could not load your activity. Check your connection and reload.');
         }
       };
       load();
