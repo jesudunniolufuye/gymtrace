@@ -58,6 +58,19 @@ describe('POST /api/admin/set-account-status', () => {
     assert.equal(scan.body.code, 'account-disabled');
   });
 
+  test('two admins deactivating each other at the same moment: only one succeeds (QA F10)', async () => {
+    for (let round = 0; round < 4; round++) {
+      const a = await makeUser({ role: 'admin', profile: { name: 'Admin A' } });
+      const b = await makeUser({ role: 'admin', profile: { name: 'Admin B' } });
+      const [ra, rb] = await Promise.all([
+        act({ userId: b.uid, action: 'deactivate' }, a.idToken),
+        act({ userId: a.uid, action: 'deactivate' }, b.idToken),
+      ]);
+      const disabled = [(await profileOf(a.uid)).status, (await profileOf(b.uid)).status].filter((s) => s === 'disabled').length;
+      assert.equal(disabled, 1, `round ${round}: statuses ${ra.status}/${rb.status}`);
+      assert.deepEqual([ra.status, rb.status].sort(), [200, 403], `round ${round}`);
+    }
+  });
   test('deactivating twice is harmless', async () => {
     const m = await makeUser();
     await act({ userId: m.uid, action: 'deactivate' });

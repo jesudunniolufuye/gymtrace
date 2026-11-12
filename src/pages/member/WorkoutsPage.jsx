@@ -337,7 +337,7 @@ const WorkoutsPage = () => {
                             </p>
                           </div>
                         </div>
-                        <button onClick={() => handleDelete(w.id)} className="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-all p-1.5 rounded-lg hover:bg-red-50">
+                        <button onClick={() => handleDelete(w.id)} aria-label={`Delete ${w.title}`} className="shrink-0 text-gray-400 hover:text-red-500 transition-all p-1.5 rounded-lg hover:bg-red-50">
                           <Trash2 size={16} />
                         </button>
                       </div>

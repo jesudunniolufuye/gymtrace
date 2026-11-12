@@ -41,16 +41,28 @@ export default apiHandler('/admin/set-account-status', ['POST'], async (req, res
 
   if (action === 'deactivate') {
     if (user.status !== 'disabled') {
-      // Login first: if anything below fails, the person is still locked out.
+      // Profile first, in a transaction that also re-reads the acting admin.
+      // If two admins deactivate each other at the same moment, the second
+      // transaction sees its own admin already disabled and is refused, so
+      // they cannot lock each other (and the gym) out. A disabled profile is
+      // refused by the rules and every API at once, even before the login is.
+      const staffRef = adminDb.doc(`users/${staffId}`);
+      await adminDb.runTransaction(async (tx) => {
+        const [staffSnap, targetSnap] = await Promise.all([tx.get(staffRef), tx.get(ref)]);
+        if (staffSnap.get('status') === 'disabled') {
+          throw new HttpError(403, 'Your account has been deactivated.', { code: 'account-disabled' });
+        }
+        if (targetSnap.get('status') === 'disabled') return;
+        tx.update(ref, {
+          status: 'disabled',
+          statusBeforeDeactivation: targetSnap.get('status') ?? 'active',
+          deactivatedAt: FieldValue.serverTimestamp(),
+          deactivatedBy: by,
+          deactivationReason: reason || null,
+        });
+      });
       await adminAuth.updateUser(userId, { disabled: true });
       await adminAuth.revokeRefreshTokens(userId);
-      await ref.update({
-        status: 'disabled',
-        statusBeforeDeactivation: user.status ?? 'active',
-        deactivatedAt: FieldValue.serverTimestamp(),
-        deactivatedBy: by,
-        deactivationReason: reason || null,
-      });
     }
     return send(res, 200, { userId, status: 'disabled' });
   }

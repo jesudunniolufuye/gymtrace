@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { onAuthChange } from "../services/authService";
 import { getUserDoc } from "../services/userService";
+import { retry } from "../lib/retry";
 
 const AuthContext = createContext(null);
 
@@ -34,7 +35,8 @@ export const AuthProvider = ({ children }) => {
       setLoading(true);
       let profile = null;
       try {
-        profile = await getUserDoc(firebaseUser.uid);
+        // One failed read must not strand the person on "profile not found".
+        profile = await retry(() => getUserDoc(firebaseUser.uid));
       } catch (error) {
         console.error("Failed to load user profile", error);
       }

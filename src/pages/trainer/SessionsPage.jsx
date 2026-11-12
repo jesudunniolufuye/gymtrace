@@ -12,6 +12,7 @@ const SessionsPage = () => {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [confirmCancelId, setConfirmCancelId] = useState(null); // session waiting for "Yes, cancel"
 
   const fetchSessions = async () => {
     if (!user) return;
@@ -168,14 +169,25 @@ const SessionsPage = () => {
                     </td>
                     <td className="py-4 px-6 text-right">
                       {session.status === 'upcoming' && (
-                        <div className="flex items-center justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button onClick={() => handleComplete(session.id)} className="text-xs font-medium text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors">
-                            Mark Complete
-                          </button>
-                          <button onClick={() => handleCancel(session.id)} className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
-                            Cancel
-                          </button>
-                        </div>
+                        confirmCancelId === session.id ? (
+                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                            <button onClick={() => { setConfirmCancelId(null); handleCancel(session.id); }} className="text-xs font-medium text-white bg-red-600 hover:bg-red-700 px-3 py-1.5 rounded-lg transition-colors">
+                              Yes, cancel
+                            </button>
+                            <button onClick={() => setConfirmCancelId(null)} className="text-xs font-medium text-gray-600 hover:bg-gray-100 px-3 py-1.5 rounded-lg transition-colors">
+                              Keep
+                            </button>
+                          </div>
+                        ) : (
+                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+                            <button onClick={() => handleComplete(session.id)} className="text-xs font-medium text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50 px-3 py-1.5 rounded-lg transition-colors">
+                              Mark Complete
+                            </button>
+                            <button onClick={() => setConfirmCancelId(session.id)} className="text-xs font-medium text-red-600 hover:text-red-700 hover:bg-red-50 px-3 py-1.5 rounded-lg transition-colors">
+                              Cancel
+                            </button>
+                          </div>
+                        )
                       )}
                     </td>
                   </tr>

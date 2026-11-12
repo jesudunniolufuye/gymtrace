@@ -122,6 +122,18 @@ describe('POST /api/admin/record-payment: outcomes', () => {
     assert.equal(p.listPrice, 25000);
     assert.equal(p.note, 'Staff discount approved by manager');
   });
+  test('same key with a different plan, amount or method → 409, nothing new recorded (QA F14)', async () => {
+    const m = await makeUser();
+    const k = key();
+    const first = await record({ ...cashMonthly(m.uid), idempotencyKey: k });
+    assert.equal(first.status, 200);
+    for (const change of [{ plan: 'session', amount: 500 }, { amount: 20000, note: 'discount agreed' }, { method: 'transfer', externalReference: 'FT123456' }]) {
+      const r = await record({ ...cashMonthly(m.uid), ...change, idempotencyKey: k });
+      assert.equal(r.status, 409, JSON.stringify(change));
+      assert.equal(r.body.code, 'idempotency-conflict');
+    }
+    assert.equal((await paymentsOf(m.uid)).length, 1);
+  });
   test('submitting the same form twice records it once', async () => {
     const m = await makeUser();
     const body = { ...cashMonthly(m.uid), idempotencyKey: key() };

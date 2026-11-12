@@ -1,6 +1,6 @@
 // src/pages/trainer/SchedulePage.jsx
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Clock, User, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Clock, User, Loader2 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import { getWeekTrainerBookings } from '../../services/bookingService';
 
@@ -136,7 +136,7 @@ const SchedulePage = () => {
                       return (
                         <div key={`${day.full}-${time}`} className="border-r border-gray-100 last:border-r-0 p-1 relative group">
                           {event ? (
-                            <div className={`absolute inset-1 rounded-lg p-2 text-xs border cursor-pointer hover:shadow-md transition-all z-10 ${colorMap[event.status] || colorMap.upcoming}`}>
+                            <div className={`absolute inset-1 rounded-lg p-2 text-xs border z-10 ${colorMap[event.status] || colorMap.upcoming}`}>
                               <div className="font-bold truncate">{event.sessionType || 'Training'}</div>
                               <div className="flex items-center gap-1 mt-1 opacity-90 truncate">
                                 <User size={10} />
@@ -148,9 +148,7 @@ const SchedulePage = () => {
                               </div>
                             </div>
                           ) : (
-                            <div className="w-full h-full hover:bg-gray-50 transition-colors cursor-pointer rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
-                              <Plus size={16} className="text-gray-300" />
-                            </div>
+                            <div className="w-full h-full" />
                           )}
                         </div>
                       );

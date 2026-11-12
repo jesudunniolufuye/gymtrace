@@ -92,3 +92,19 @@ describe('layout fixes', () => {
     assert.match(read('src/pages/member/MemberDashboard.jsx'), /formatSessionDate\(nextBooking\.date\)/);
   });
 });
+
+describe('actions are not hidden behind mouse hover (invisible on phones and tablets)', () => {
+  test('no button in the app is opacity-0 until hover', () => {
+    for (const f of ['src/pages/trainer/SessionsPage.jsx', 'src/pages/member/WorkoutsPage.jsx', 'src/pages/trainer/SchedulePage.jsx']) {
+      assert.doesNotMatch(read(f), /opacity-0 group-hover:opacity-100/, f);
+    }
+  });
+  test('trainer Cancel asks once more before cancelling', () => {
+    const src = read('src/pages/trainer/SessionsPage.jsx');
+    assert.match(src, /Yes, cancel/);
+    assert.match(src, /setConfirmCancelId\(session\.id\)/);
+  });
+  test('empty schedule slots do not pretend to be clickable', () => {
+    assert.doesNotMatch(read('src/pages/trainer/SchedulePage.jsx'), /cursor-pointer/);
+  });
+});

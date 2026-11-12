@@ -152,6 +152,15 @@ describe('POST /api/pay: outcomes', () => {
     assert.equal((await getUser(m.uid)).subscription.expiresAt.toMillis(), expAfterFirst);
   });
 
+  test('same key with a different plan → 409, charged once (QA F14)', async () => {
+    const m = await makeUser();
+    const k = key();
+    assert.equal((await call(pay, { token: m.idToken, body: { plan: 'session', idempotencyKey: k, card: goodCard } })).status, 200);
+    const r = await call(pay, { token: m.idToken, body: { plan: 'monthly', idempotencyKey: k, card: goodCard } });
+    assert.equal(r.status, 409);
+    assert.equal(r.body.code, 'idempotency-conflict');
+    assert.equal((await paymentsOf(m.uid)).length, 1);
+  });
   test('two members using the same key get separate payments', async () => {
     const a = await makeUser();
     const b = await makeUser();

@@ -66,7 +66,14 @@ export default apiHandler('/admin/record-payment', ['POST'], async (req, res) =>
 
   // A double-click or retry of the same form submission: return the first result.
   const earlier = await paymentRefFor(memberId, body.idempotencyKey).get();
-  if (earlier.exists) return send(res, 200, { payment: serializePayment(earlier.id, earlier.data()) });
+  if (earlier.exists) {
+    const first = earlier.data();
+    // Same key but a different payment: refuse rather than report the first one as if it were this one.
+    if (first.plan !== plan.id || first.amount !== amount || first.method !== body.method) {
+      throw new HttpError(409, 'This form was already used for a different payment. Close it and start again.', { code: 'idempotency-conflict' });
+    }
+    return send(res, 200, { payment: serializePayment(earlier.id, first) });
+  }
 
   checkEligibility(member.subscription, plan.id, Date.now());
 

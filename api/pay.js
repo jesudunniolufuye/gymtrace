@@ -36,7 +36,12 @@ export default apiHandler('/pay', ['POST'], async (req, res) => {
 
   // A retry of a request we already processed: return the stored result.
   const earlier = await paymentRefFor(uid, body.idempotencyKey).get();
-  if (earlier.exists) return respond(res, earlier.id, earlier.data());
+  if (earlier.exists) {
+    if (earlier.data().plan !== plan.id) {
+      throw new HttpError(409, 'This checkout was already used for a different plan. Close it and start again.', { code: 'idempotency-conflict' });
+    }
+    return respond(res, earlier.id, earlier.data());
+  }
 
   // Refuse pointless purchases before "charging" anything.
   checkEligibility(profile.subscription, plan.id, Date.now());
