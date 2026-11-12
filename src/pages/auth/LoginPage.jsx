@@ -14,7 +14,6 @@ import logo from '../../assets/logo.png';
 const loginSchema = z.object({
   email: z.string().email('Please enter a valid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
-  rememberMe: z.boolean().optional(),
 });
 
 const LoginPage = () => {
@@ -29,7 +28,6 @@ const LoginPage = () => {
     defaultValues: {
       email: '',
       password: '',
-      rememberMe: false,
     },
   });
 
@@ -187,19 +185,6 @@ const LoginPage = () => {
             {errors.password && (
               <p className="text-red-500 text-xs mt-1 font-medium">{errors.password.message}</p>
             )}
-          </div>
-
-          {/* Remember Me checkbox */}
-          <div className="flex items-center space-x-3">
-            <input
-              type="checkbox"
-              id="rememberMe"
-              className="w-5 h-5 rounded border-slate-300 text-emerald-500 focus:ring-emerald-500"
-              {...register('rememberMe')}
-            />
-            <label htmlFor="rememberMe" className="text-sm text-slate-600 font-medium cursor-pointer">
-              Remember me for 30 days
-            </label>
           </div>
 
           {/* Submit Button */}

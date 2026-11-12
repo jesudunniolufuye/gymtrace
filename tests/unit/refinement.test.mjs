@@ -145,3 +145,7 @@ describe('staff cannot save a blank or over-long name when editing a member or t
     test(f, () => assert.match(read(`src/pages/${f}.jsx`), /const name = validateName\(editModal\.name\)/));
   }
 });
+
+describe('login page', () => {
+  test('has no "Remember me" checkbox that does nothing', () => assert.doesNotMatch(read('src/pages/auth/LoginPage.jsx'), /rememberMe|Remember me/));
+});
